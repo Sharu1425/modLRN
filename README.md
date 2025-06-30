@@ -177,4 +177,8 @@ For support, email support@modlrn.com or create an issue in the repository.
 
 ---
 
-**Built with ❤️ using modern web technologies**
+## Authors 
+- Rahul V S
+- Sharvesh Ram K S
+- Adhithya R
+- Yukesh D
