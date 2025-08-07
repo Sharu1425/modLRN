@@ -6,6 +6,7 @@ import AnimatedBackground from "../components/AnimatedBackground";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
+import EmptyState from "../components/EmptyState";
 import api from "../utils/api";
 import { ANIMATION_VARIANTS, TRANSITION_DEFAULTS } from "../utils/constants";
 
@@ -108,21 +109,17 @@ const Results: React.FC<ResultsProps> = ({ user }) => {
             <>
                 <AnimatedBackground />
                 <div className="min-h-screen pt-20 px-4 relative z-10 flex items-center justify-center">
-                    <Card className="p-8 max-w-md mx-auto text-center">
-                        <div className="text-red-400 mb-4">
+                    <EmptyState
+                        title="No Results Found"
+                        message="No assessment results were found. Please complete an assessment first."
+                        actionText="Start Assessment"
+                        onAction={() => navigate("/assessconfig")}
+                        icon={
                             <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                        </div>
-                        <h3 className="text-xl font-bold text-purple-200 mb-4">No Results Found</h3>
-                        <p className="text-purple-300 mb-6">No assessment results were found. Please complete an assessment first.</p>
-                        <Button 
-                            onClick={() => navigate("/assessconfig")}
-                            variant="primary"
-                        >
-                            Start Assessment
-                        </Button>
-                    </Card>
+                        }
+                    />
                 </div>
             </>
         );

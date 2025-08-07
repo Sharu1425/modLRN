@@ -7,7 +7,8 @@ import { useToast } from "../hooks/useToast";
 import AnimatedBackground from "../components/AnimatedBackground";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
-import LoadingSpinner from "../components/ui/LoadingSpinner";
+import LoadingState from "../components/LoadingState";
+import ErrorState from "../components/ErrorState";
 import api from "../utils/api";
 import { ANIMATION_VARIANTS, TRANSITION_DEFAULTS } from "../utils/constants";
 
@@ -303,7 +304,7 @@ const Assessment: React.FC<AssessmentProps> = ({ user }) => {
             <>
                 <AnimatedBackground />
                 <div className="min-h-screen pt-20 px-4 relative z-10 flex items-center justify-center">
-                    <LoadingSpinner size="lg" text="Checking authentication..." />
+                    <LoadingState size="lg" text="Checking authentication..." showCard={true} />
                 </div>
             </>
         );
@@ -352,7 +353,7 @@ const Assessment: React.FC<AssessmentProps> = ({ user }) => {
                         variants={ANIMATION_VARIANTS.fadeIn}
                         className="text-center"
                     >
-                        <LoadingSpinner size="lg" text="Loading questions..." />
+                        <LoadingState size="lg" text="Loading questions..." />
                         <div className={`
                             w-full max-w-md mx-auto mt-6 rounded-full h-2.5
                             ${mode === 'professional'
@@ -379,20 +380,13 @@ const Assessment: React.FC<AssessmentProps> = ({ user }) => {
                         variants={ANIMATION_VARIANTS.slideUp}
                         className="text-center"
                     >
-                        <Card className="p-8 max-w-md mx-auto">
-                            <div className="text-red-400 mb-4">
-                                <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <p className="text-red-300 text-lg mb-6">{error}</p>
-                            <Button
-                                 onClick={() => navigate("/assessconfig")}
-                                variant="primary"
-                            >
-                                Configure Assessment
-                            </Button>
-                        </Card>
+                        <ErrorState
+                            title="Assessment Error"
+                            message={error}
+                            onBack={() => navigate("/assessconfig")}
+                            backText="Configure Assessment"
+                            showCard={true}
+                        />
                     </motion.div>
                 ) : question && (
                     <AnimatePresence mode="wait">
@@ -406,7 +400,7 @@ const Assessment: React.FC<AssessmentProps> = ({ user }) => {
                         >
                             {isSubmitting ? (
                                 <Card className="p-8 text-center">
-                                    <LoadingSpinner size="lg" text="Submitting assessment..." />
+                                    <LoadingState size="lg" text="Submitting assessment..." />
                                     <p className="text-purple-300 mt-4">Please wait while we save your results...</p>
                                 </Card>
                             ) : (

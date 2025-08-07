@@ -6,6 +6,7 @@ import { useAuth } from "./hooks/useAuth";
 import { useToast } from "./hooks/useToast";
 import Navbar from "./components/Navbar";
 import ToastContainer from "./components/ui/ToastContainer";
+import LoadingState from "./components/LoadingState";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import AssessConfig from "./pages/AssessConfig";
@@ -16,18 +17,13 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
-import LoadingSpinner from "./components/ui/LoadingSpinner";
 
 const AppContent: React.FC = () => {
     const { user, setUser, logout, isLoading } = useAuth();
     const { toasts, removeToast } = useToast();
 
     if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-                <LoadingSpinner size="lg" text="Loading application..." />
-            </div>
-        );
+        return <LoadingState text="Loading application..." size="lg" fullScreen={true} />;
     }
 
     return (

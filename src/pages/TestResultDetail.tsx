@@ -5,7 +5,8 @@ import { User, DetailedTestResult, QuestionReview } from '../types';
 import AnimatedBackground from '../components/AnimatedBackground';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 import api from '../utils/api';
 import { ANIMATION_VARIANTS, TRANSITION_DEFAULTS } from '../utils/constants';
 
@@ -77,9 +78,7 @@ const TestResultDetail: React.FC<TestResultDetailProps> = ({ user }) => {
             <>
                 <AnimatedBackground />
                 <div className="min-h-screen pt-20 px-4 relative z-10 flex items-center justify-center">
-                    <Card className="p-8 max-w-md mx-auto text-center">
-                        <LoadingSpinner text="Loading test result..." />
-                    </Card>
+                    <LoadingState text="Loading test result..." showCard={true} />
                 </div>
             </>
         );
@@ -90,29 +89,14 @@ const TestResultDetail: React.FC<TestResultDetailProps> = ({ user }) => {
             <>
                 <AnimatedBackground />
                 <div className="min-h-screen pt-20 px-4 relative z-10 flex items-center justify-center">
-                    <Card className="p-8 max-w-md mx-auto text-center">
-                        <div className="text-red-400 mb-4">
-                            <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <h3 className="text-xl font-bold text-purple-200 mb-4">Error Loading Result</h3>
-                        <p className="text-purple-300 mb-6">{error}</p>
-                        <div className="space-x-4">
-                            <Button 
-                                onClick={fetchDetailedResult}
-                                variant="primary"
-                            >
-                                Retry
-                            </Button>
-                            <Button 
-                                onClick={() => navigate('/profile')}
-                                variant="outline"
-                            >
-                                Back to Profile
-                            </Button>
-                        </div>
-                    </Card>
+                    <ErrorState
+                        title="Error Loading Result"
+                        message={error}
+                        onRetry={fetchDetailedResult}
+                        onBack={() => navigate('/profile')}
+                        retryText="Retry"
+                        backText="Back to Profile"
+                    />
                 </div>
             </>
         );
@@ -123,21 +107,12 @@ const TestResultDetail: React.FC<TestResultDetailProps> = ({ user }) => {
             <>
                 <AnimatedBackground />
                 <div className="min-h-screen pt-20 px-4 relative z-10 flex items-center justify-center">
-                    <Card className="p-8 max-w-md mx-auto text-center">
-                        <div className="text-red-400 mb-4">
-                            <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <h3 className="text-xl font-bold text-purple-200 mb-4">Result Not Found</h3>
-                        <p className="text-purple-300 mb-6">The requested test result could not be found.</p>
-                        <Button 
-                            onClick={() => navigate('/profile')}
-                            variant="primary"
-                        >
-                            Back to Profile
-                        </Button>
-                    </Card>
+                    <ErrorState
+                        title="Result Not Found"
+                        message="The requested test result could not be found."
+                        onBack={() => navigate('/profile')}
+                        backText="Back to Profile"
+                    />
                 </div>
             </>
         );

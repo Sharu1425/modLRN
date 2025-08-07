@@ -7,6 +7,8 @@ import AnimatedBackground from "../components/AnimatedBackground";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
+import StatsCard from "../components/StatsCard";
+import ErrorState from "../components/ErrorState";
 import api from "../utils/api";
 import { ANIMATION_VARIANTS, TRANSITION_DEFAULTS } from "../utils/constants";
 
@@ -253,15 +255,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                                     variants={ANIMATION_VARIANTS.slideUp}
                                     transition={{ delay: index * 0.1 }}
                                 >
-                                    <Card className="p-6 text-center" hover={true}>
-                                        <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${stat.color} flex items-center justify-center mx-auto mb-4 text-white`}>
-                                            {stat.icon}
-                                        </div>
-                                        <h3 className="text-2xl font-bold text-purple-200 mb-2">
-                                            {loading ? <LoadingSpinner size="sm" /> : stat.value}
-                                        </h3>
-                                        <p className="text-purple-300 text-sm">{stat.title}</p>
-                                    </Card>
+                                    <StatsCard
+                                        title={stat.title}
+                                        value={stat.value}
+                                        icon={stat.icon}
+                                        color={stat.color}
+                                        loading={loading}
+                                    />
                                 </motion.div>
                             ))}
                         </motion.div>
@@ -285,10 +285,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                                 animate={{ opacity: 1 }}
                                 className="text-center py-8"
                             >
-                                <p className="text-red-400 mb-4">{error}</p>
-                                <Button onClick={fetchStats} variant="outline">
-                                    Retry
-                                </Button>
+                                <ErrorState
+                                    title="Dashboard Error"
+                                    message={error}
+                                    onRetry={fetchStats}
+                                    retryText="Retry"
+                                    showCard={false}
+                                />
                             </motion.div>
                         )}
 

@@ -19,12 +19,14 @@
 
 ### Core Functionality
 - 🤖 **AI-Powered Question Generation** — Dynamic, topic-based questions via Google Gemini AI
-- 🧑‍💻 **Face Recognition Authentication** — Secure access with facial recognition
+- 🔐 **Advanced Face Recognition** — Secure biometric authentication with real-time detection
 - 🧠 **Adaptive Learning** — Personalized paths that evolve with progress
 - 📊 **Real-time Analytics** — Visualize and track progress with beautiful charts
-- 📝 **Interactive Assessments** — Engaging quizzes with smooth animations
-- 👤 **Profile Management** — Full account management (Google OAuth included)
+- 📝 **Interactive Assessments** — Engaging quizzes with smooth animations and timer
+- 👤 **Profile Management** — Full account management with face registration
 - 🔄 **Backend Status Indicator** — Real-time backend health monitoring
+- ⏱️ **Assessment Timer** — Configurable time limits with automatic submission
+- 📈 **Detailed Results** — Comprehensive performance analysis with explanations
 
 ### Tech Highlights
 - 🎨 **Modern UI/UX** — Responsive Tailwind CSS & Framer Motion animations
@@ -64,8 +66,9 @@
   <summary><strong>Authentication</strong></summary>
   <ul>
     <li><b>Google OAuth 2.0</b></li>
-    <li><b>Face Recognition</b> with Euclidean distance matching</li>
+    <li><b>Advanced Face Recognition</b> with real-time detection and Euclidean distance matching</li>
     <li><b>JWT-based</b> local authentication</li>
+    <li><b>Face Registration</b> with secure descriptor storage</li>
   </ul>
 </details>
 
@@ -85,9 +88,11 @@ modLRN2/
 │   ├── routers/           # API routes
 │   └── utils/             # Utility functions
 ├── src/                   # React Frontend
-│   ├── components/        # React components
+│   ├── components/        # React components (FaceLogin, FaceRegistration)
 │   ├── pages/            # Page components
-│   └── App.jsx           # Main app component
+│   ├── ui/               # Reusable UI components
+│   ├── utils/            # Utility functions and API
+│   └── types/            # TypeScript type definitions
 ├── public/                # Static assets (Face Recognition models)
 ├── package.json           # Node.js dependencies
 └── vite.config.js         # Vite configuration with proxy
@@ -178,11 +183,12 @@ DEBUG=True
 ## 👩‍🎓 Usage
 
 ### For Users
-1. **Sign Up/Login** — Register or use face/Google OAuth
-2. **Configure Assessment** — Pick topic, difficulty, quantity
-3. **Take Assessment** — Answer AI-generated questions, get instant feedback
-4. **View Results** — Detailed analytics and charts
-5. **Track Progress** — Visualize your learning journey
+1. **Sign Up/Login** — Register or use face recognition/Google OAuth
+2. **Face Registration** — Set up biometric authentication in profile settings
+3. **Configure Assessment** — Pick topic, difficulty, quantity, and time limit
+4. **Take Assessment** — Answer AI-generated questions with timer and instant feedback
+5. **View Results** — Detailed analytics, charts, and performance insights
+6. **Track Progress** — Visualize your learning journey with comprehensive statistics
 
 ### For Developers
 - **API Docs** — Auto-generated Swagger documentation at `/docs`
@@ -199,6 +205,7 @@ DEBUG=True
 - `POST /auth/login` - User login
 - `POST /auth/face` - Face recognition login
 - `POST /auth/register-face` - Register face descriptor
+- `GET /auth/face-status` - Check if user has registered face
 - `GET /auth/google` - Google OAuth initiation
 - `GET /auth/google/callback` - Google OAuth callback
 - `POST /auth/logout` - User logout
@@ -253,12 +260,15 @@ DEBUG=True
 </details>
 
 <details>
-  <summary><b>Face Recognition</b></summary>
+  <summary><b>Advanced Face Recognition</b></summary>
   <ul>
-    <li><b>Face-API.js</b> for real-time detection</li>
-    <li><b>Euclidean distance</b> matching for accuracy</li>
-    <li><b>Secure storage</b> of facial descriptors</li>
+    <li><b>Face-API.js</b> for real-time detection and landmark detection</li>
+    <li><b>Euclidean distance</b> matching with configurable threshold</li>
+    <li><b>Secure storage</b> of 128-dimensional facial descriptors</li>
     <li><b>Multi-user</b> face recognition support</li>
+    <li><b>Face Registration</b> component with camera management</li>
+    <li><b>Real-time detection</b> with visual feedback and success animations</li>
+    <li><b>Automatic login</b> upon face detection with proper cleanup</li>
   </ul>
 </details>
 
@@ -268,6 +278,8 @@ DEBUG=True
     <li><b>Performance tracking</b> across topics and difficulties</li>
     <li><b>Personalized analytics</b> with detailed charts</li>
     <li><b>Progress visualization</b> with real-time updates</li>
+    <li><b>Time tracking</b> with configurable assessment timers</li>
+    <li><b>Detailed results</b> with explanations and performance insights</li>
   </ul>
 </details>
 
@@ -287,11 +299,13 @@ DEBUG=True
 
 - **JWT-based authentication** with configurable expiration
 - **Password hashing** with bcrypt
-- **Face recognition** with Euclidean distance matching
+- **Advanced face recognition** with Euclidean distance matching and configurable threshold
 - **Google OAuth 2.0** integration
 - **CORS protection** configured
 - **Input validation** with Pydantic schemas
 - **Type safety** throughout the application
+- **Secure camera management** with proper cleanup and error handling
+- **Face descriptor validation** with 128-dimensional vector checks
 
 ---
 
@@ -307,8 +321,10 @@ DEBUG=True
 ### Frontend Optimizations
 - **Vite** for fast development and building
 - **Tailwind CSS** for optimized styling
-- **Framer Motion** for smooth animations
+- **Framer Motion** for smooth animations and success transitions
 - **Axios interceptors** for centralized API handling
+- **TypeScript** for type safety and better development experience
+- **Modular components** with reusable UI elements
 
 ---
 
@@ -331,6 +347,15 @@ DEBUG=True
 4. **CORS Errors**
    - Check CORS settings in main.py
    - Verify frontend URL in allow_origins
+
+5. **Face Recognition Issues**
+   - Ensure camera permissions are granted
+   - Check if face detection models are loaded
+   - Verify face registration in profile settings
+
+6. **Assessment Timer Issues**
+   - Check if time calculation is correct
+   - Verify timer state management
 
 ### Debug Mode
 Enable debug mode for detailed error messages:
