@@ -21,11 +21,12 @@ interface Explanation {
 const Results: React.FC<ResultsProps> = ({ user }) => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { score, totalQuestions, topic, difficulty, questions, userAnswers, explanations: stateExplanations } = location.state || { 
+    const { score, totalQuestions, topic, difficulty, questions, userAnswers, timeTaken, explanations: stateExplanations } = location.state || { 
         score: 0, 
         totalQuestions: 0, 
         questions: [], 
         userAnswers: [],
+        timeTaken: 0,
         explanations: []
     };
     
@@ -93,6 +94,13 @@ const Results: React.FC<ResultsProps> = ({ user }) => {
         if (percentage >= 70) return "Good work! Keep it up! 👍";
         if (percentage >= 60) return "Not bad! There's room for improvement! 📚";
         return "Keep practicing! You'll get better! 💪";
+    };
+
+    const formatTime = (seconds: number | undefined) => {
+        if (!seconds) return 'N/A';
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
 
     if (!location.state) {
@@ -170,10 +178,11 @@ const Results: React.FC<ResultsProps> = ({ user }) => {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             {[
                                 { label: "Total Questions", value: totalQuestions, icon: "📝" },
                                 { label: "Correct Answers", value: score, icon: "✅" },
+                                { label: "Time Taken", value: formatTime(timeTaken), icon: "⏱️" },
                                 { label: "Topic", value: topic, icon: "📚" },
                                 { label: "Difficulty", value: difficulty, icon: "⚡" }
                             ].map((stat, index) => (

@@ -89,31 +89,39 @@ const FaceLogin: React.FC<FaceLoginProps> = ({ onSuccess, onCancel }) => {
       setIsDetecting(true);
       setError(null);
 
+      console.log('🔍 Starting face detection for login...');
       const detections = await faceapi
         .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
         .withFaceLandmarks()
         .withFaceDescriptor();
 
       if (!detections) {
-        setError('No face detected. Please ensure your face is clearly visible.');
+        setError('No face detected. Please ensure your face is clearly visible in the camera.');
         return;
       }
 
+      console.log('✅ Face detected, extracting descriptor...');
+      const faceDescriptor = Array.from(detections.descriptor);
+      console.log('🔍 Face descriptor length:', faceDescriptor.length);
+
       const response = await api.post('/auth/face', {
-        face_descriptor: Array.from(detections.descriptor)
+        face_descriptor: faceDescriptor
       });
 
       if (response.data.success) {
+        console.log('✅ Face login successful');
         onSuccess(response.data.user);
       }
     } catch (error: any) {
-      console.error('Face recognition error:', error);
+      console.error('❌ Face recognition error:', error);
       
       let errorMessage = 'Face recognition failed. Please try again.';
       
       if (error.response?.data?.detail) {
         if (error.response.data.detail.includes('No registered faces found')) {
           errorMessage = 'No registered faces found. Please register your face first in your profile settings.';
+        } else if (error.response.data.detail.includes('Face recognition failed')) {
+          errorMessage = 'Face not recognized. Please ensure you are using the same face that was registered.';
         } else {
           errorMessage = error.response.data.detail;
         }

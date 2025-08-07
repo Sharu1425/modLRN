@@ -140,6 +140,11 @@ async def face_login(face_data: FaceLoginRequest):
         print(f"🔍 Face descriptor length: {len(face_data.face_descriptor)}")
         print(f"🔍 First few values: {face_data.face_descriptor[:5]}")
         
+        # Validate face descriptor
+        if not face_data.face_descriptor or len(face_data.face_descriptor) != 128:
+            print("❌ Invalid face descriptor length")
+            raise HTTPException(status_code=400, detail="Invalid face descriptor format")
+        
         db = await get_db()
         
         # Get all users with valid face descriptors (not null)
@@ -158,7 +163,7 @@ async def face_login(face_data: FaceLoginRequest):
         # Find best match
         best_match = None
         best_distance = float('inf')
-        threshold = 0.6
+        threshold = 0.8  # Increased threshold for better face recognition accuracy
         
         for user in users_with_faces:
             if user.get("face_descriptor") and user["face_descriptor"] is not None:
@@ -206,6 +211,32 @@ async def face_login(face_data: FaceLoginRequest):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/face-status")
+async def get_face_status(user_id: str = Depends(get_current_user_id)):
+    """Check if user has registered face"""
+    try:
+        print(f"🔍 Checking face status for user: {user_id}")
+        
+        db = await get_db()
+        from bson import ObjectId
+        
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        has_face = user.get("face_descriptor") is not None and len(user.get("face_descriptor", [])) == 128
+        
+        print(f"🔍 User has registered face: {has_face}")
+        
+        return {
+            "success": True,
+            "has_face": has_face
+        }
+    except Exception as e:
+        print(f"❌ Face status check error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/register-face")
 async def register_face(face_data: FaceLoginRequest, user_id: str = Depends(get_current_user_id)):
     """Register face descriptor for user"""
@@ -214,6 +245,11 @@ async def register_face(face_data: FaceLoginRequest, user_id: str = Depends(get_
         print(f"🔍 Face descriptor type: {type(face_data.face_descriptor)}")
         print(f"🔍 Face descriptor length: {len(face_data.face_descriptor)}")
         print(f"🔍 First few values: {face_data.face_descriptor[:5]}")
+        
+        # Validate face descriptor
+        if not face_data.face_descriptor or len(face_data.face_descriptor) != 128:
+            print("❌ Invalid face descriptor length")
+            raise HTTPException(status_code=400, detail="Invalid face descriptor format")
         
         db = await get_db()
         

@@ -135,8 +135,9 @@ const Assessment: React.FC<AssessmentProps> = ({ user }) => {
             }
 
             // Calculate time taken
-            const totalTime = config.qnCount * 90; // 90 seconds per question
-            const timeTaken = totalTime - (timeRemaining || 0);
+            const totalTime = getDifficultyTime(config.difficulty, config.qnCount);
+            const timeTaken = Math.max(0, totalTime - (timeRemaining || 0));
+            console.log(`⏱️ [TIME_CALC] Total time: ${totalTime}s, Time remaining: ${timeRemaining}s, Time taken: ${timeTaken}s`);
 
             // Fetch explanations for questions
             let explanations = [];
