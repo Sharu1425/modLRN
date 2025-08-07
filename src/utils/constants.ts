@@ -43,6 +43,13 @@ export const TRANSITION_DEFAULTS = {
     ease: "easeInOut"
 };
 
+// Spring transition for bouncy animations
+export const SPRING_TRANSITION = {
+    type: "spring",
+    stiffness: 100,
+    damping: 15
+};
+
 // Assessment configuration
 export const DIFFICULTY_LEVELS = [
     "Very Easy",
