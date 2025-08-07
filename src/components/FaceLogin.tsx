@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as faceapi from '@vladmandic/face-api';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { User } from '../types';
 import api from '../utils/api';
@@ -22,9 +22,13 @@ const FaceLogin: React.FC<FaceLoginProps> = ({ onSuccess, onCancel }) => {
   const [loadingMessage, setLoadingMessage] = useState('Loading face detection models...');
   const [error, setError] = useState<string | null>(null);
   const [isDetecting, setIsDetecting] = useState(false);
+  const [faceDetected, setFaceDetected] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [cameraStopped, setCameraStopped] = useState(false);
 
   const loadModels = useCallback(async () => {
     try {
+      console.log('🔍 [FACE_LOGIN] Starting model loading...');
       setLoadingMessage('Loading face detection models...');
       
       const modelLoadPromise = Promise.all([
@@ -38,11 +42,20 @@ const FaceLogin: React.FC<FaceLoginProps> = ({ onSuccess, onCancel }) => {
       );
 
       await Promise.race([modelLoadPromise, timeoutPromise]);
+      console.log('✅ [FACE_LOGIN] Models loaded successfully');
 
+      console.log('🔍 [FACE_LOGIN] Starting video stream...');
       setLoadingMessage('Starting video stream...');
       await startVideo();
+      console.log('✅ [FACE_LOGIN] Video started successfully');
+      
       setIsLoading(false);
+      console.log('🔍 [FACE_LOGIN] Starting face detection immediately...');
+      
+      // Start detection immediately after video is ready
+      startFaceDetection();
     } catch (err) {
+      console.error('❌ [FACE_LOGIN] Model loading error:', err);
       const errorMessage = err instanceof Error && err.message === 'Model loading timed out' 
         ? 'Face detection models took too long to load. Please check your internet connection and try again.'
         : 'Failed to load face detection models. Please try again later.';
@@ -79,41 +92,144 @@ const FaceLogin: React.FC<FaceLoginProps> = ({ onSuccess, onCancel }) => {
     }
   }, []);
 
-  const detectFace = useCallback(async () => {
+  // Simple face detection function
+  const startFaceDetection = useCallback(() => {
+    if (!videoRef.current) {
+      console.log('❌ [FACE_LOGIN] No video ref');
+      return;
+    }
+
+    console.log('🔍 [FACE_LOGIN] Starting face detection...');
+    
+    const detectLoop = async () => {
+      if (!videoRef.current || !videoRef.current.srcObject || showSuccessAnimation || cameraStopped) {
+        console.log('🔍 [FACE_LOGIN] Detection stopped - camera inactive, success animation showing, or camera stopped');
+        return;
+      }
+
+      try {
+        const detections = await faceapi
+          .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks();
+
+        if (detections && canvasRef.current && videoRef.current) {
+          const canvas = canvasRef.current;
+          const video = videoRef.current;
+          const displaySize = { width: video.offsetWidth, height: video.offsetHeight };
+          
+          canvas.width = displaySize.width;
+          canvas.height = displaySize.height;
+          
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const resizedDetection = faceapi.resizeResults(detections, displaySize);
+            faceapi.draw.drawDetections(canvas, resizedDetection);
+            faceapi.draw.drawFaceLandmarks(canvas, resizedDetection);
+            
+            setFaceDetected(true);
+            console.log('✅ [FACE_LOGIN] Face detected, attempting login...');
+            
+            // Attempt login when face is detected
+            if (!isDetecting) {
+              attemptLogin();
+            }
+          }
+        } else {
+          setFaceDetected(false);
+          if (canvasRef.current) {
+            const ctx = canvasRef.current.getContext('2d');
+            if (ctx) {
+              ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("❌ [FACE_LOGIN] Face detection error:", error);
+        setFaceDetected(false);
+      }
+
+      // Continue detection if camera is still active, no success animation, and camera not stopped
+      if (videoRef.current && videoRef.current.srcObject && !showSuccessAnimation && !cameraStopped) {
+        setTimeout(detectLoop, 100);
+      }
+    };
+
+    detectLoop();
+  }, [showSuccessAnimation, cameraStopped]);
+
+  // Function to stop camera
+  const stopCamera = useCallback(() => {
+    console.log('🔍 [FACE_LOGIN] Stopping camera...');
+    setCameraStopped(true); // Immediately stop detection loop
+    
+    if (videoRef.current?.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      console.log('🔍 [FACE_LOGIN] Found tracks:', tracks.length);
+      tracks.forEach(track => {
+        console.log('🔍 [FACE_LOGIN] Stopping track:', track.kind, 'enabled:', track.enabled);
+        track.stop();
+      });
+      videoRef.current.srcObject = null;
+      console.log('✅ [FACE_LOGIN] Camera stopped successfully');
+    } else {
+      console.log('❌ [FACE_LOGIN] No video srcObject to stop');
+    }
+  }, []);
+
+  // Function to attempt login
+  const attemptLogin = useCallback(async () => {
     if (!videoRef.current || videoRef.current.readyState !== 4) {
-      setError('Video stream is not ready. Please wait a moment and try again.');
+      console.log('❌ [FACE_LOGIN] Video not ready for login');
       return;
     }
 
     try {
+      console.log('🔍 [FACE_LOGIN] Starting face recognition...');
       setIsDetecting(true);
       setError(null);
 
-      console.log('🔍 Starting face detection for login...');
       const detections = await faceapi
         .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
         .withFaceLandmarks()
         .withFaceDescriptor();
 
       if (!detections) {
-        setError('No face detected. Please ensure your face is clearly visible in the camera.');
+        console.log('❌ [FACE_LOGIN] No face detected for login');
+        setIsDetecting(false);
         return;
       }
 
-      console.log('✅ Face detected, extracting descriptor...');
       const faceDescriptor = Array.from(detections.descriptor);
-      console.log('🔍 Face descriptor length:', faceDescriptor.length);
+      console.log('🔍 [FACE_LOGIN] Face descriptor length:', faceDescriptor.length);
 
+      console.log('🌐 [FACE_LOGIN] Making API request to /auth/face');
       const response = await api.post('/auth/face', {
         face_descriptor: faceDescriptor
       });
 
+      console.log('✅ [FACE_LOGIN] API response:', response.data);
+
       if (response.data.success) {
-        console.log('✅ Face login successful');
-        onSuccess(response.data.user);
+        console.log('✅ [FACE_LOGIN] Face login successful!');
+        
+        // Stop detection and show success animation
+        setShowSuccessAnimation(true);
+        
+        // Store auth data
+        localStorage.setItem('access_token', response.data.access_token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Wait for animation then navigate
+        setTimeout(() => {
+          console.log('✅ [FACE_LOGIN] Animation complete, stopping camera and navigating...');
+          stopCamera();
+          onSuccess(response.data.user);
+        }, 2500); // 2.5 seconds for animation
       }
     } catch (error: any) {
-      console.error('❌ Face recognition error:', error);
+      console.error('❌ [FACE_LOGIN] Face recognition error:', error);
       
       let errorMessage = 'Face recognition failed. Please try again.';
       
@@ -131,18 +247,18 @@ const FaceLogin: React.FC<FaceLoginProps> = ({ onSuccess, onCancel }) => {
     } finally {
       setIsDetecting(false);
     }
-  }, [onSuccess]);
+  }, [stopCamera, onSuccess]);
 
   useEffect(() => {
+    console.log('🔍 [FACE_LOGIN] Component mounted, starting models...');
+    setCameraStopped(false); // Reset camera stopped flag
     loadModels();
 
     return () => {
-      if (videoRef.current?.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-        tracks.forEach(track => track.stop());
-      }
+      console.log('🔍 [FACE_LOGIN] Component unmounting, cleaning up...');
+      stopCamera();
     };
-  }, [loadModels]);
+  }, [loadModels, stopCamera]);
 
   return (
     <motion.div
@@ -151,16 +267,28 @@ const FaceLogin: React.FC<FaceLoginProps> = ({ onSuccess, onCancel }) => {
       transition={{ duration: 0.5 }}
       className="flex flex-col items-center space-y-4 p-4"
     >
-      <div className="relative w-[320px] h-[240px] bg-gray-900 rounded-lg overflow-hidden border-2 border-purple-500/30">
-        <video
-          ref={videoRef}
-          className="w-full h-full object-cover"
-          playsInline
-          muted
-        />
-        <canvas ref={canvasRef} className="absolute top-0 left-0" />
-        
-        {isLoading && (
+             <div className="relative w-[320px] h-[240px] bg-gray-900 rounded-lg overflow-hidden border-2 border-purple-500/30">
+         <video
+           ref={videoRef}
+           className="w-full h-full object-cover"
+           playsInline
+           muted
+         />
+         <canvas ref={canvasRef} className="absolute top-0 left-0" />
+         
+         {faceDetected && !showSuccessAnimation && (
+           <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+             Face Detected
+           </div>
+         )}
+         
+         {isDetecting && !showSuccessAnimation && (
+           <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">
+             Logging In...
+           </div>
+         )}
+         
+         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="text-center text-white">
               <LoadingSpinner size="md" />
@@ -168,7 +296,58 @@ const FaceLogin: React.FC<FaceLoginProps> = ({ onSuccess, onCancel }) => {
             </div>
           </div>
         )}
-      </div>
+
+        {/* Success Animation */}
+        <AnimatePresence>
+          {showSuccessAnimation && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="absolute inset-0 flex items-center justify-center bg-green-500 bg-opacity-90"
+            >
+              <div className="text-center text-white">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                  className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <motion.svg
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
+                    className="w-8 h-8 text-green-500"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20,6 9,17 4,12" />
+                  </motion.svg>
+                </motion.div>
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="text-lg font-semibold"
+                >
+                  Login Successful!
+                </motion.p>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.0 }}
+                  className="text-sm opacity-90"
+                >
+                  Redirecting to dashboard...
+                </motion.p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+       </div>
 
       {error && (
         <motion.div
@@ -190,34 +369,29 @@ const FaceLogin: React.FC<FaceLoginProps> = ({ onSuccess, onCancel }) => {
         </motion.div>
       )}
 
-      <div className="text-center text-sm text-gray-400 mb-4">
-        <p>Make sure you have registered your face in your profile settings first.</p>
-        <p className="mt-1">
-          <Link to="/profile" className="text-blue-400 hover:text-blue-300 underline">
-            Go to Profile Settings
-          </Link>
-        </p>
-      </div>
-      
-      <div className="flex space-x-3">
-        <Button
-          onClick={detectFace}
-          disabled={isLoading || isDetecting}
-          isLoading={isDetecting}
-          variant="primary"
-          size="md"
-        >
-          {isDetecting ? 'Detecting...' : 'Detect Face'}
-        </Button>
-        <Button
-          onClick={onCancel}
-          disabled={isLoading || isDetecting}
-          variant="outline"
-          size="md"
-        >
-          Cancel
-        </Button>
-      </div>
+             <div className="text-center text-sm text-gray-400 mb-4">
+         <p>Position your face in the camera view to log in automatically.</p>
+         <p className="mt-1">
+           <Link to="/profile" className="text-blue-400 hover:text-blue-300 underline">
+             Register Face in Profile Settings
+           </Link>
+         </p>
+       </div>
+       
+                               <div className="flex space-x-3">
+           <Button
+             onClick={() => {
+               console.log('🔍 [FACE_LOGIN] Cancel clicked, stopping camera...');
+               stopCamera();
+               onCancel();
+             }}
+             disabled={isLoading || isDetecting || showSuccessAnimation}
+             variant="outline"
+             size="md"
+           >
+             Cancel
+           </Button>
+         </div>
     </motion.div>
   );
 };
