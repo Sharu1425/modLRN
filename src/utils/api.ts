@@ -1,9 +1,21 @@
 import axios, { AxiosResponse } from 'axios';
 import { ApiResponse } from '../types';
 
+// Environment-based API configuration
+const getApiBaseUrl = () => {
+    // Check for environment variable or use production URL
+    const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
+    if (envUrl) {
+        return envUrl;
+    }
+    
+    // Production URL
+    return 'https://modlrn.onrender.com';
+};
+
 // Create axios instance with default configuration
 const api = axios.create({
-    baseURL: 'http://localhost:5001',
+    baseURL: getApiBaseUrl(),
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
