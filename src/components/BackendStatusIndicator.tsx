@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "../contexts/ThemeContext";
+import { API_BASE_URL } from "../utils/constants";
 
 interface BackendStatusIndicatorProps {
     className?: string;
@@ -12,7 +13,7 @@ const BackendStatusIndicator: React.FC<BackendStatusIndicatorProps> = ({ classNa
 
     const checkBackendStatus = useCallback(async () => {
         try {
-            const response = await fetch('/api/health', {
+            const response = await fetch(`${API_BASE_URL}/api/health`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 signal: AbortSignal.timeout(3000)
