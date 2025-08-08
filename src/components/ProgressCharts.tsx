@@ -56,20 +56,54 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
 
     useEffect(() => {
         if (user?._id) {
+            // Add timeout to prevent infinite loading
+            const timeoutId = setTimeout(() => {
+                if (loading) {
+                    console.log('⏰ [PROGRESS_CHARTS] Loading timeout, showing placeholder data');
+                    setLoading(false);
+                    setHasRealData(false);
+                    setProgressData([
+                        { name: "Test 1", score: 65, date: "2024-01-15" },
+                        { name: "Test 2", score: 72, date: "2024-01-20" },
+                        { name: "Test 3", score: 78, date: "2024-01-25" },
+                        { name: "Test 4", score: 85, date: "2024-01-30" },
+                        { name: "Test 5", score: 88, date: "2024-02-05" },
+                    ]);
+                    setSubjectData([
+                        { name: "Mathematics", value: 35, averageScore: 78 },
+                        { name: "Physics", value: 25, averageScore: 82 },
+                        { name: "Chemistry", value: 20, averageScore: 75 },
+                        { name: "Biology", value: 20, averageScore: 80 },
+                    ]);
+                    setPerformanceData([
+                        { name: "Mathematics", score: 78, questions: 150 },
+                        { name: "Physics", score: 82, questions: 120 },
+                        { name: "Chemistry", score: 75, questions: 100 },
+                        { name: "Biology", score: 80, questions: 80 },
+                    ]);
+                }
+            }, 5000); // 5 second timeout
+
             fetchAnalytics();
+
+            return () => clearTimeout(timeoutId);
         }
     }, [user?._id]);
 
     const fetchAnalytics = async () => {
         try {
             setLoading(true);
+            console.log('🔍 [PROGRESS_CHARTS] Fetching analytics for user:', user._id);
+            
             const response = await api.get(`/api/results/analytics/${user._id}`);
+            console.log('📥 [PROGRESS_CHARTS] Analytics response:', response.data);
             
             if (response.data.success) {
                 const analytics: Analytics = response.data.analytics;
                 
                 // Check if we have real data (more than 5 tests)
                 if (analytics.recent_results && analytics.recent_results.length >= 5) {
+                    console.log('✅ [PROGRESS_CHARTS] Using real data with', analytics.recent_results.length, 'tests');
                     setHasRealData(true);
                     
                     // Process recent results for progress chart
@@ -108,6 +142,7 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
                     setPerformanceData(performance);
                     
                 } else {
+                    console.log('📊 [PROGRESS_CHARTS] Using placeholder data (less than 5 tests)');
                     // Show placeholder data for users with less than 5 tests
                     setHasRealData(false);
                     setProgressData([
@@ -134,7 +169,7 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
                 throw new Error("Failed to fetch analytics");
             }
         } catch (error) {
-            console.error("Error fetching analytics:", error);
+            console.error("❌ [PROGRESS_CHARTS] Error fetching analytics:", error);
             // Show placeholder data
             setHasRealData(false);
             setProgressData([
@@ -157,11 +192,12 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
                 { name: "Biology", score: 80, questions: 80 },
             ]);
         } finally {
+            console.log('✅ [PROGRESS_CHARTS] Setting loading to false');
             setLoading(false);
         }
     };
 
-    if (loading) {
+    if (loading && progressData.length === 0) {
         return (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {[1, 2].map((i) => (
