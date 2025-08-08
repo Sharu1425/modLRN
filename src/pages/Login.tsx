@@ -118,7 +118,7 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
 
     const handleGoogleLogin = async () => {
         try {
-            window.location.href = "/auth/google";
+            window.location.href = "https://modlrn.onrender.com/auth/google";
         } catch (err) {
             error('Google Login Failed', 'Unable to initiate Google login');
         }

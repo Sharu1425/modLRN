@@ -64,7 +64,7 @@ const Signup: React.FC<SignupProps> = ({ setUser }) => {
     };
 
     const handleGoogleSignup = () => {
-        window.location.href = "/auth/google";
+        window.location.href = "https://modlrn.onrender.com/auth/google";
     };
 
     return (
