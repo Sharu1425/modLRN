@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { User, Analytics, TestResult } from "../types";
+import { useTheme } from "../contexts/ThemeContext";
+import { useToast } from "../contexts/ToastContext";
 import ProgressCharts from "../components/ProgressCharts";
 import AnimatedBackground from "../components/AnimatedBackground";
 import Card from "../components/ui/Card";
@@ -25,6 +27,9 @@ interface DashboardStats {
 
 const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     console.log('📊 [DASHBOARD] Loading dashboard for user:', user?.email);
+    
+    const { mode, colorScheme } = useTheme();
+    const { success, error: showError, info, warning } = useToast();
     
     const [stats, setStats] = useState<DashboardStats>({
         completedAssessments: 0,
@@ -366,6 +371,49 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                                     </Link>
                                 </Card>
                             </motion.div>
+                        </motion.div>
+
+                        {/* Test Toast Notifications */}
+                        <motion.div
+                            variants={ANIMATION_VARIANTS.slideUp}
+                            initial="initial"
+                            animate="animate"
+                            transition={{ delay: 0.6 }}
+                            className="mt-6"
+                        >
+                            <Card className="p-6">
+                                <h3 className="text-xl font-semibold text-purple-200 mb-4">Test Toast Notifications</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <Button 
+                                        onClick={() => success('Success Test!', 'This is a success toast notification.')}
+                                        variant="primary"
+                                        size="sm"
+                                    >
+                                        Success Toast
+                                    </Button>
+                                    <Button 
+                                        onClick={() => showError('Error Test!', 'This is an error toast notification.')}
+                                        variant="secondary"
+                                        size="sm"
+                                    >
+                                        Error Toast
+                                    </Button>
+                                    <Button 
+                                        onClick={() => info('Info Test!', 'This is an info toast notification.')}
+                                        variant="outline"
+                                        size="sm"
+                                    >
+                                        Info Toast
+                                    </Button>
+                                    <Button 
+                                        onClick={() => warning('Warning Test!', 'This is a warning toast notification.')}
+                                        variant="outline"
+                                        size="sm"
+                                    >
+                                        Warning Toast
+                                    </Button>
+                                </div>
+                            </Card>
                         </motion.div>
                     </Card>
                 </motion.div>

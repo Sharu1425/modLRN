@@ -3,7 +3,7 @@ import * as faceapi from '@vladmandic/face-api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { User } from '../types';
-import { useToast } from '../hooks/useToast';
+import { useToast } from '../contexts/ToastContext';
 import api from '../utils/api';
 import Button from './ui/Button';
 import LoadingSpinner from './ui/LoadingSpinner';

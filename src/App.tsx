@@ -2,8 +2,8 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { ToastProvider, useToast } from "./contexts/ToastContext";
 import { useAuth } from "./hooks/useAuth";
-import { useToast } from "./hooks/useToast";
 import Navbar from "./components/Navbar";
 import ToastContainer from "./components/ui/ToastContainer";
 import LoadingState from "./components/LoadingState";
@@ -80,7 +80,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
     return (
         <ThemeProvider>
-            <AppContent />
+            <ToastProvider>
+                <AppContent />
+            </ToastProvider>
         </ThemeProvider>
     );
 };

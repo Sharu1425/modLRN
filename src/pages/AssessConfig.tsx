@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { User, AssessmentConfig } from "../types";
-import { useTheme } from "../contexts/ThemeContext";
-import { useToast } from "../hooks/useToast";
+
+import { useToast } from "../contexts/ToastContext";
 import AnimatedBackground from "../components/AnimatedBackground";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -17,7 +17,6 @@ interface AssessConfigProps {
 }
 
 const AssessConfig: React.FC<AssessConfigProps> = ({ user }) => {
-    const { mode, colorScheme } = useTheme();
     const { success, error: showError } = useToast();
     const [config, setConfig] = useState<AssessmentConfig>({
         topic: "Science",

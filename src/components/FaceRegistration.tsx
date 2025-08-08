@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import * as faceapi from "@vladmandic/face-api";
-import { useToast } from "../hooks/useToast";
+import { useToast } from "../contexts/ToastContext";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
 import LoadingSpinner from "./ui/LoadingSpinner";

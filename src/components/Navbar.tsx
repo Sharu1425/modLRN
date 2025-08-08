@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { User } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
-import { useToast } from "../hooks/useToast";
+import { useToast } from "../contexts/ToastContext";
 import ThemeToggle from "./ui/ThemeToggle";
 import UserProfileDropdown from "./ui/UserProfileDropdown";
 import BackendStatusIndicator from "./BackendStatusIndicator";

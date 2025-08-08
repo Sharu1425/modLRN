@@ -5,7 +5,7 @@ import { User } from '../types';
 import AnimatedBackground from '../components/AnimatedBackground';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { useToast } from '../hooks/useToast';
+import { useToast } from '../contexts/ToastContext';
 import api from '../utils/api';
 import { ANIMATION_VARIANTS, TRANSITION_DEFAULTS } from '../utils/constants';
 

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Question, AssessmentConfig } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
-import { useToast } from "../hooks/useToast";
+import { useToast } from "../contexts/ToastContext";
 import AnimatedBackground from "../components/AnimatedBackground";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
