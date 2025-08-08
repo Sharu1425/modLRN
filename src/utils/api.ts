@@ -35,7 +35,7 @@ api.interceptors.request.use(
         return config;
     },
     (error) => {
-        console.error('API Request Error:', error);
+        console.error('🌐 [API] Request error:', error.message);
         return Promise.reject(error);
     }
 );
@@ -46,15 +46,8 @@ api.interceptors.response.use(
         return response;
     },
     (error) => {
-        console.error('API Error:', {
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            url: error.config?.url,
-            data: error.response?.data,
-            message: error.message
-        });
-        
         if (error.response?.status === 401) {
+            console.log('🔐 [API] Unauthorized request, clearing token');
             // Clear invalid token
             localStorage.removeItem('access_token');
             localStorage.removeItem('user');
@@ -62,6 +55,8 @@ api.interceptors.response.use(
             if (window.location.pathname !== '/login') {
                 window.location.href = '/login';
             }
+        } else {
+            console.error('🌐 [API] Response error:', error.message);
         }
         return Promise.reject(error);
     }

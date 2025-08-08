@@ -65,17 +65,17 @@ async def fetch_questions_from_gemini(
     user_id: str = Depends(get_current_user_id)
 ):
     """Generate questions using Google Gemini AI"""
-    print(f"🔍 Questions endpoint called - Topic: {topic}, Difficulty: {difficulty}, Count: {count}, User: {user_id}")
+    print(f"🤖 [QUESTIONS] User {user_id} requesting {count} {difficulty} questions for topic: {topic}")
     
     try:
         if not model:
-            print("❌ Gemini API key not configured")
+            print("❌ [QUESTIONS] Gemini API key not configured")
             raise HTTPException(
                 status_code=500, 
                 detail="Gemini API key is not configured properly"
             )
         
-        print(f"✅ Generating {count} questions for topic: {topic}, difficulty: {difficulty}")
+        print(f"🤖 [QUESTIONS] Generating questions via Gemini AI for user {user_id}")
         
         # Create prompt for Gemini
         prompt = f"""Generate {count} multiple-choice questions on {topic} with {difficulty} difficulty. 
@@ -112,7 +112,7 @@ async def fetch_questions_from_gemini(
             if not isinstance(questions, list):
                 raise ValueError("Response is not a list")
             
-            print(f"Generated {len(questions)} questions from Gemini")
+            print(f"🤖 [QUESTIONS] Generated {len(questions)} questions from Gemini AI")
             
             # Store questions in database
             await add_questions_to_db(topic, difficulty, questions)
@@ -126,7 +126,7 @@ async def fetch_questions_from_gemini(
                     "answer": q["correctAnswer"]
                 })
             
-            print(f"✅ Successfully generated {len(formatted_questions)} questions")
+            print(f"✅ [QUESTIONS] Successfully generated and stored {len(formatted_questions)} questions for user {user_id}")
             return formatted_questions
             
         except json.JSONDecodeError as e:

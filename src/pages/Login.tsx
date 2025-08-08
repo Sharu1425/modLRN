@@ -33,12 +33,8 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
         const token = searchParams.get('token');
         const errorParam = searchParams.get('error');
         
-        console.log('🔍 Login component - checking URL parameters');
-        console.log('🔍 Token:', token ? `${token.substring(0, 20)}...` : 'None');
-        console.log('🔍 Error:', errorParam || 'None');
-        
         if (errorParam) {
-            console.log('❌ Google OAuth error detected:', errorParam);
+            console.log('❌ [GOOGLE_LOGIN] OAuth error detected:', errorParam);
             error('Google Login Failed', decodeURIComponent(errorParam));
             // Clean up URL
             navigate('/login', { replace: true });
@@ -46,33 +42,31 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
         }
         
         if (token) {
-            console.log('🔍 Google OAuth token received, processing...');
+            console.log('🔐 [GOOGLE_LOGIN] Processing OAuth token');
             // Handle successful Google OAuth callback
             localStorage.setItem('access_token', token);
             
             // Fetch user info using the token
             const fetchUserInfo = async () => {
                 try {
-                    console.log('🔍 Fetching user info from backend...');
+                    console.log('🔐 [GOOGLE_LOGIN] Fetching user profile');
                     const response = await api.get('/auth/status', {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
                     });
                     
-                    console.log('🔍 User info response:', response.data);
-                    
                     if (response.data.isAuthenticated && response.data.user) {
-                        console.log('✅ Google login successful, setting user:', response.data.user);
+                        console.log('✅ [GOOGLE_LOGIN] Login successful for:', response.data.user.email);
                         setUser(response.data.user);
                         success('Google Login Successful!', `Welcome back, ${response.data.user.name || response.data.user.username}!`);
                         navigate("/dashboard", { replace: true });
                     } else {
-                        console.log('❌ User info response indicates not authenticated');
+                        console.log('❌ [GOOGLE_LOGIN] Authentication failed');
                         throw new Error('Failed to get user info');
                     }
                 } catch (err: any) {
-                    console.error("❌ Google login error:", err);
+                    console.error("❌ [GOOGLE_LOGIN] Error:", err);
                     error('Google Login Failed', 'Failed to complete Google login. Please try again.');
                     localStorage.removeItem('access_token');
                 }
@@ -95,6 +89,7 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
         setIsLoading(true);
 
         try {
+            console.log('🔐 [LOGIN] Attempting login for:', formData.email);
             const response = await api.post("/auth/login", formData);
             
             if (response.data.success) {
@@ -102,13 +97,14 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
                 localStorage.setItem('access_token', access_token);
                 localStorage.setItem('user', JSON.stringify(user));
                 setUser(user);
+                console.log('✅ [LOGIN] Login successful for:', user.email);
                 success('Login Successful!', `Welcome back, ${user.name || user.username}!`);
                 navigate("/dashboard", { replace: true });
             } else {
                 throw new Error(response.data.error || 'Login failed');
             }
         } catch (err: any) {
-            console.error("Login error:", err);
+            console.error("❌ [LOGIN] Error:", err);
             const errorMessage = err.response?.data?.detail || err.message || 'Login failed. Please try again.';
             error('Login Failed', errorMessage);
         } finally {

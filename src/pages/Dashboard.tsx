@@ -24,15 +24,7 @@ interface DashboardStats {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ user }) => {
-    console.log('🔄 [DASHBOARD] Component rendered');
-    console.log('👤 [DASHBOARD] User prop:', user);
-    console.log('🆔 [DASHBOARD] User ID check:', {
-        '_id': user?._id,
-        'id': user?.id,
-        'hasOwnProperty _id': user?.hasOwnProperty('_id'),
-        'hasOwnProperty id': user?.hasOwnProperty('id'),
-        'keys': user ? Object.keys(user) : 'No user object'
-    });
+    console.log('📊 [DASHBOARD] Loading dashboard for user:', user?.email);
     
     const [stats, setStats] = useState<DashboardStats>({
         completedAssessments: 0,
@@ -45,50 +37,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        console.log('🔄 [DASHBOARD] useEffect triggered');
-        console.log('👤 [DASHBOARD] User object:', user);
-        console.log('🆔 [DASHBOARD] User ID:', user?._id || user?.id);
-        console.log('🔑 [DASHBOARD] Access token:', localStorage.getItem('access_token') ? 'Present' : 'Missing');
-        
         if (user?._id || user?.id) {
-            console.log('✅ [DASHBOARD] User ID found, calling fetch functions');
+            console.log('📊 [DASHBOARD] Fetching analytics for user:', user.email);
             fetchStats();
             fetchRecentTests();
-        } else {
-            console.log('❌ [DASHBOARD] No user ID found, skipping API calls');
         }
     }, [user?._id, user?.id]);
 
     const fetchStats = async () => {
         try {
-            console.log('🔄 [DASHBOARD] Starting fetchStats...');
             const userId = user._id || user.id;
-            console.log('👤 [DASHBOARD] User ID:', userId);
-            console.log('🔑 [DASHBOARD] Access token:', localStorage.getItem('access_token') ? 'Present' : 'Missing');
-            
             setLoading(true);
             setError(null);
             
             const url = `/api/results/analytics/${userId}`;
-            console.log('🌐 [DASHBOARD] Making analytics API request to:', url);
-            console.log('📡 [DASHBOARD] Request details:', {
-                method: 'GET',
-                url: url,
-                baseURL: 'http://localhost:5001',
-                withCredentials: true
-            });
-            
-            const startTime = Date.now();
             const response = await api.get(url);
-            const endTime = Date.now();
-            
-            console.log('⏱️ [DASHBOARD] Analytics request completed in:', endTime - startTime, 'ms');
-            console.log('📥 [DASHBOARD] Response status:', response.status);
-            console.log('📥 [DASHBOARD] Response data:', response.data);
             
             if (response.data.success) {
                 const analytics: Analytics = response.data.analytics;
-                console.log('📊 [DASHBOARD] Analytics received:', analytics);
+                console.log('📊 [DASHBOARD] Analytics loaded for user:', user.email);
                 
                 const newStats = {
                     completedAssessments: analytics.total_assessments || 0,
@@ -97,35 +64,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                     topicsStudied: analytics.topics?.length || 0
                 };
                 
-                console.log('📊 [DASHBOARD] Setting stats:', newStats);
                 setStats(newStats);
             } else {
-                console.error('❌ [DASHBOARD] API returned success: false');
                 throw new Error(response.data.error || 'Failed to fetch analytics');
             }
-            
-            console.log('✅ [DASHBOARD] fetchStats completed successfully');
         } catch (error: any) {
-            console.error("❌ [DASHBOARD] Error in fetchStats:", error);
-            console.error("❌ [DASHBOARD] Error details:", {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-                statusText: error.response?.statusText,
-                config: error.config
-            });
-            
+            console.error("❌ [DASHBOARD] Analytics error:", error.message);
             let errorMessage = "Failed to load dashboard statistics";
             if (error.response?.data?.detail) {
                 errorMessage = error.response.data.detail;
             } else if (error.message) {
                 errorMessage = error.message;
             }
-            
-            console.error("❌ [DASHBOARD] Setting error message:", errorMessage);
             setError(errorMessage);
         } finally {
-            console.log('🏁 [DASHBOARD] Setting loading to false');
             setLoading(false);
         }
     };
