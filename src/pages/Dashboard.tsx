@@ -199,6 +199,58 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                             </p>
                         </motion.div>
 
+                        {/* Action Cards */}
+                        <motion.div
+                            variants={ANIMATION_VARIANTS.stagger}
+                            initial="initial"
+                            animate="animate"
+                            className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
+                        >
+                            <motion.div variants={ANIMATION_VARIANTS.slideUp}>
+                                <Card className="p-6 h-full">
+                                    <div className="flex items-center mb-4">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center mr-4">
+                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-xl font-semibold text-purple-200">Start New Assessment</h3>
+                                    </div>
+                                    <p className="text-purple-300 mb-6 leading-relaxed">
+                                        Test your knowledge with our AI-powered adaptive assessment system. 
+                                        Get personalized questions that adapt to your skill level.
+                                    </p>
+                                    <Link to="/assessconfig">
+                                        <Button variant="primary" className="w-full">
+                                            Begin Assessment
+                                        </Button>
+                                    </Link>
+                                </Card>
+                            </motion.div>
+
+                            <motion.div variants={ANIMATION_VARIANTS.slideRight}>
+                                <Card className="p-6 h-full">
+                                    <div className="flex items-center mb-4">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mr-4">
+                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-xl font-semibold text-purple-200">View Profile</h3>
+                                    </div>
+                                    <p className="text-purple-300 mb-6 leading-relaxed">
+                                        Manage your account settings, view detailed statistics, 
+                                        and set up face recognition for secure login.
+                                    </p>
+                                    <Link to="/profile">
+                                        <Button variant="secondary" className="w-full">
+                                            Go to Profile
+                                        </Button>
+                                    </Link>
+                                </Card>
+                            </motion.div>
+                        </motion.div>
+
                         {/* Quick Stats Grid */}
                         <motion.div
                             variants={ANIMATION_VARIANTS.stagger}
@@ -320,101 +372,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                                 </Card>
                             </motion.div>
                         )}
-
-                        {/* Action Cards */}
-                        <motion.div
-                            variants={ANIMATION_VARIANTS.stagger}
-                            initial="initial"
-                            animate="animate"
-                            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                        >
-                            <motion.div variants={ANIMATION_VARIANTS.slideUp}>
-                                <Card className="p-6 h-full">
-                                    <div className="flex items-center mb-4">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center mr-4">
-                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                            </svg>
-                                        </div>
-                                        <h3 className="text-xl font-semibold text-purple-200">Start New Assessment</h3>
-                                    </div>
-                                    <p className="text-purple-300 mb-6 leading-relaxed">
-                                        Test your knowledge with our AI-powered adaptive assessment system. 
-                                        Get personalized questions that adapt to your skill level.
-                                    </p>
-                                    <Link to="/assessconfig">
-                                        <Button variant="primary" className="w-full">
-                                            Begin Assessment
-                                        </Button>
-                                    </Link>
-                                </Card>
-                            </motion.div>
-
-                            <motion.div variants={ANIMATION_VARIANTS.slideRight}>
-                                <Card className="p-6 h-full">
-                                    <div className="flex items-center mb-4">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mr-4">
-                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                        </div>
-                                        <h3 className="text-xl font-semibold text-purple-200">View Profile</h3>
-                                    </div>
-                                    <p className="text-purple-300 mb-6 leading-relaxed">
-                                        Manage your account settings, view detailed statistics, 
-                                        and set up face recognition for secure login.
-                                    </p>
-                                    <Link to="/profile">
-                                        <Button variant="secondary" className="w-full">
-                                            Go to Profile
-                                        </Button>
-                                    </Link>
-                                </Card>
-                            </motion.div>
-                        </motion.div>
-
-                        {/* Test Toast Notifications */}
-                        <motion.div
-                            variants={ANIMATION_VARIANTS.slideUp}
-                            initial="initial"
-                            animate="animate"
-                            transition={{ delay: 0.6 }}
-                            className="mt-6"
-                        >
-                            <Card className="p-6">
-                                <h3 className="text-xl font-semibold text-purple-200 mb-4">Test Toast Notifications</h3>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <Button 
-                                        onClick={() => success('Success Test!', 'This is a success toast notification.')}
-                                        variant="primary"
-                                        size="sm"
-                                    >
-                                        Success Toast
-                                    </Button>
-                                    <Button 
-                                        onClick={() => showError('Error Test!', 'This is an error toast notification.')}
-                                        variant="secondary"
-                                        size="sm"
-                                    >
-                                        Error Toast
-                                    </Button>
-                                    <Button 
-                                        onClick={() => info('Info Test!', 'This is an info toast notification.')}
-                                        variant="outline"
-                                        size="sm"
-                                    >
-                                        Info Toast
-                                    </Button>
-                                    <Button 
-                                        onClick={() => warning('Warning Test!', 'This is a warning toast notification.')}
-                                        variant="outline"
-                                        size="sm"
-                                    >
-                                        Warning Toast
-                                    </Button>
-                                </div>
-                            </Card>
-                        </motion.div>
                     </Card>
                 </motion.div>
             </div>
