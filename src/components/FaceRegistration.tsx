@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import * as faceapi from "@vladmandic/face-api";
+import { useToast } from "../hooks/useToast";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
 import LoadingSpinner from "./ui/LoadingSpinner";
@@ -12,6 +13,7 @@ interface FaceRegistrationProps {
 }
 
 const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onSuccess, onCancel }) => {
+    const { success, error: showError } = useToast();
     const [isRegisteringFace, setIsRegisteringFace] = useState(false);
     const [faceRegistrationError, setFaceRegistrationError] = useState("");
     const [faceRegistrationSuccess, setFaceRegistrationSuccess] = useState(false);
@@ -278,10 +280,12 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onSuccess, onCancel
                 setFaceRegistrationSuccess(true);
                 setHasRegisteredFace(true);
                 stopVideo();
+                success('Face Registration Successful!', 'Your face has been registered successfully. You can now use face login.');
                 onSuccess?.();
             } else {
                 console.log('❌ [FACE_REG] Face registration failed:', response.data.error);
                 setFaceRegistrationError(response.data.error || "Failed to register face");
+                showError('Face Registration Failed', response.data.error || "Failed to register face");
             }
         } catch (error: any) {
             console.error("❌ [FACE_REG] Face registration error:", error);
@@ -296,6 +300,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onSuccess, onCancel
             }
             
             setFaceRegistrationError(errorMessage);
+            showError('Face Registration Failed', errorMessage);
         } finally {
             setIsRegisteringFace(false);
         }

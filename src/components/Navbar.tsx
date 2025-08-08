@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { User } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
+import { useToast } from "../hooks/useToast";
 import ThemeToggle from "./ui/ThemeToggle";
 import UserProfileDropdown from "./ui/UserProfileDropdown";
 import BackendStatusIndicator from "./BackendStatusIndicator";
@@ -16,6 +17,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ user, setUser }) => {
     const { mode, colorScheme } = useTheme();
+    const { success } = useToast();
     const navigate = useNavigate();
     const location = useLocation();
     const [scrolled, setScrolled] = useState(false);
@@ -39,11 +41,18 @@ const Navbar: React.FC<NavbarProps> = ({ user, setUser }) => {
             localStorage.removeItem('access_token');
             localStorage.removeItem('user');
             setUser(null);
+            success('Logout Successful!', 'You have been logged out successfully.');
             navigate("/login", { replace: true });
         } catch (error) {
             console.error("Logout failed:", error);
+            // Still logout locally even if server logout fails
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user');
+            setUser(null);
+            success('Logout Successful!', 'You have been logged out successfully.');
+            navigate("/login", { replace: true });
         }
-    }, [setUser, navigate]);
+    }, [setUser, navigate, success]);
 
     const isActive = useCallback((path: string) => location.pathname === path, [location.pathname]);
 

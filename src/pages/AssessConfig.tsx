@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { User, AssessmentConfig } from "../types";
+import { useTheme } from "../contexts/ThemeContext";
+import { useToast } from "../hooks/useToast";
 import AnimatedBackground from "../components/AnimatedBackground";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -15,6 +17,8 @@ interface AssessConfigProps {
 }
 
 const AssessConfig: React.FC<AssessConfigProps> = ({ user }) => {
+    const { mode, colorScheme } = useTheme();
+    const { success, error: showError } = useToast();
     const [config, setConfig] = useState<AssessmentConfig>({
         topic: "Science",
         qnCount: 5,
@@ -87,6 +91,7 @@ const AssessConfig: React.FC<AssessConfigProps> = ({ user }) => {
             
             if (response.data.success) {
                 console.log('✅ Assessment config saved, navigating to assessment...');
+                success('Assessment Started!', `Starting ${config.qnCount} questions on ${config.topic} (${config.difficulty})`);
                 navigate("/assessment", { replace: true });
             } else {
                 throw new Error(response.data.error || 'Failed to start assessment');
@@ -107,6 +112,7 @@ const AssessConfig: React.FC<AssessConfigProps> = ({ user }) => {
             }
             
             setError(errorMessage);
+            showError('Assessment Start Failed', errorMessage);
         } finally {
             setIsSubmitting(false);
         }

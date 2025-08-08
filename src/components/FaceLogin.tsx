@@ -3,6 +3,7 @@ import * as faceapi from '@vladmandic/face-api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { User } from '../types';
+import { useToast } from '../hooks/useToast';
 import api from '../utils/api';
 import Button from './ui/Button';
 import LoadingSpinner from './ui/LoadingSpinner';
@@ -16,6 +17,7 @@ interface FaceLoginProps {
 }
 
 const FaceLogin: React.FC<FaceLoginProps> = ({ onSuccess, onCancel }) => {
+  const { success, error: showError } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -225,6 +227,7 @@ const FaceLogin: React.FC<FaceLoginProps> = ({ onSuccess, onCancel }) => {
         setTimeout(() => {
           console.log('✅ [FACE_LOGIN] Animation complete, stopping camera and navigating...');
           stopCamera();
+          success('Face Login Successful!', `Welcome back, ${response.data.user.name || response.data.user.username}!`);
           onSuccess(response.data.user);
         }, 2500); // 2.5 seconds for animation
       }
@@ -244,6 +247,7 @@ const FaceLogin: React.FC<FaceLoginProps> = ({ onSuccess, onCancel }) => {
       }
       
       setError(errorMessage);
+      showError('Face Login Failed', errorMessage);
     } finally {
       setIsDetecting(false);
     }

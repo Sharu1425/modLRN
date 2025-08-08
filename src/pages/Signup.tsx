@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { User } from "../types";
+import { useTheme } from "../contexts/ThemeContext";
+import { useToast } from "../hooks/useToast";
 import AnimatedBackground from "../components/AnimatedBackground";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -14,6 +16,8 @@ interface SignupProps {
 }
 
 const Signup: React.FC<SignupProps> = ({ setUser }) => {
+    const { mode, colorScheme } = useTheme();
+    const { success, error: showError } = useToast();
     const [formData, setFormData] = useState({
         username: "",
         email: "",
@@ -36,6 +40,7 @@ const Signup: React.FC<SignupProps> = ({ setUser }) => {
         
         if (formData.password !== formData.confirmPassword) {
             setError("Passwords don't match");
+            showError('Registration Failed', 'Passwords do not match');
             return;
         }
 
@@ -54,10 +59,12 @@ const Signup: React.FC<SignupProps> = ({ setUser }) => {
             }
             
             setUser(response.data.user);
+            success('Registration Successful!', `Welcome, ${response.data.user.name || response.data.user.username}!`);
             navigate("/dashboard", { replace: true });
         } catch (err: any) {
             const errorMessage = err.response?.data?.detail || "Registration failed";
             setError(errorMessage);
+            showError('Registration Failed', errorMessage);
         } finally {
             setIsLoading(false);
         }
