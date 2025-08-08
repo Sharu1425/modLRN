@@ -19,8 +19,6 @@ const LoadingState: React.FC<LoadingStateProps> = ({
     className = "",
     fullScreen = false
 }) => {
-    const { mode, colorScheme } = useTheme();
-
     const content = (
         <div className={`flex flex-col items-center justify-center ${className}`}>
             <LoadingSpinner size={size} text={text} />

@@ -136,7 +136,7 @@ const AssessConfig: React.FC<AssessConfigProps> = ({ user }) => {
             <AnimatedBackground />
             <div className="min-h-screen pt-20 px-4 relative z-10">
                 <motion.div
-                    variants={ANIMATION_VARIANTS.scale}
+                    variants={ANIMATION_VARIANTS.scaleIn}
                     initial="initial"
                     animate="animate"
                     transition={TRANSITION_DEFAULTS}

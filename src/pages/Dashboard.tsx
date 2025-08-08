@@ -371,7 +371,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                             animate="animate"
                             className="grid grid-cols-1 md:grid-cols-2 gap-6"
                         >
-                            <motion.div variants={ANIMATION_VARIANTS.slideLeft}>
+                            <motion.div variants={ANIMATION_VARIANTS.slideUp}>
                                 <Card className="p-6 h-full">
                                     <div className="flex items-center mb-4">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center mr-4">

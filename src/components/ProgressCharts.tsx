@@ -185,7 +185,6 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
                                 dataKey="value"
                                 onMouseEnter={(_, index) => setActiveIndex(index)}
                                 label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                labelStyle={{ fill: "#ffffff", fontSize: "12px" }}
                             >
                                 {subjectData.map((entry, index) => (
                                     <Cell

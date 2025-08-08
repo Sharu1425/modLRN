@@ -85,7 +85,7 @@ const LandingPage: React.FC = () => {
                     </motion.p>
                     
                     <motion.div
-                        variants={ANIMATION_VARIANTS.scale}
+                        variants={ANIMATION_VARIANTS.scaleIn}
                         initial="initial"
                         animate="animate"
                         transition={{ delay: 0.4 }}

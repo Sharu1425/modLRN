@@ -72,7 +72,7 @@ const Signup: React.FC<SignupProps> = ({ setUser }) => {
             <AnimatedBackground />
             <div className="min-h-screen flex items-center justify-center px-4 py-16 relative z-10">
                 <motion.div
-                    variants={ANIMATION_VARIANTS.scale}
+                    variants={ANIMATION_VARIANTS.scaleIn}
                     initial="initial"
                     animate="animate"
                     transition={TRANSITION_DEFAULTS}
