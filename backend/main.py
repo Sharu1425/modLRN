@@ -40,7 +40,9 @@ app.add_middleware(
         "http://127.0.0.1:5173", 
         "http://localhost:3000",
         "https://modlrn.vercel.app",  # Production frontend
-        "https://modlrn.onrender.com"  # Production backend (for health checks)
+        "https://modlrn.onrender.com",  # Production backend
+        "https://accounts.google.com",  # Google OAuth
+        "https://oauth2.googleapis.com"  # Google OAuth token endpoint
     ],
     allow_credentials=True,
     allow_methods=["*"],
