@@ -24,7 +24,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 # Google OAuth settings
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-GOOGLE_REDIRECT_URI = "http://localhost:5001/auth/google/callback"
+# Use environment variable for redirect URI or default to localhost
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:5001/auth/google/callback")
 
 # In-memory session storage (in production, use Redis or database)
 sessions = {}
@@ -389,14 +390,16 @@ async def google_oauth_callback(code: str):
         )
         
         print(f"🔍 Redirecting to frontend with token")
-        # Redirect to frontend with token
-        frontend_url = f"http://localhost:5173/login?token={access_token}"
+        # Redirect to frontend with token - use environment variable or default
+        frontend_base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+        frontend_url = f"{frontend_base_url}/login?token={access_token}"
         return RedirectResponse(url=frontend_url)
         
     except Exception as e:
         print(f"❌ Google OAuth error: {e}")
-        # Redirect to login page with error
-        error_url = f"http://localhost:5173/login?error=Google+login+failed"
+        # Redirect to login page with error - use environment variable or default
+        frontend_base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+        error_url = f"{frontend_base_url}/login?error=Google+login+failed"
         return RedirectResponse(url=error_url)
 
 @router.post("/logout")
