@@ -26,6 +26,7 @@ const COLORS = ["#6366f1", "#8b5cf6", "#3b82f6", "#2dd4bf", "#f59e0b", "#ef4444"
 
 interface ProgressChartsProps {
     user: User;
+    analytics?: Analytics | null;
 }
 
 interface ChartData {
@@ -46,8 +47,7 @@ interface PerformanceData {
     questions: number;
 }
 
-const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
-    const [activeIndex, setActiveIndex] = useState(0);
+const ProgressCharts: React.FC<ProgressChartsProps> = ({ user, analytics }) => {
     const [progressData, setProgressData] = useState<ChartData[]>([]);
     const [subjectData, setSubjectData] = useState<SubjectData[]>([]);
     const [performanceData, setPerformanceData] = useState<PerformanceData[]>([]);
@@ -55,46 +55,106 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (user?._id) {
-            // Add timeout to prevent infinite loading
-            const timeoutId = setTimeout(() => {
-                if (loading) {
-                    console.log('⏰ [PROGRESS_CHARTS] Loading timeout, showing placeholder data');
-                    setLoading(false);
-                    setHasRealData(false);
-                    
-                    const placeholderProgress = [
-                        { name: "Test 1", score: 65, date: "2024-01-15" },
-                        { name: "Test 2", score: 72, date: "2024-01-20" },
-                        { name: "Test 3", score: 78, date: "2024-01-25" },
-                        { name: "Test 4", score: 85, date: "2024-01-30" },
-                        { name: "Test 5", score: 88, date: "2024-02-05" },
-                    ];
-                    const placeholderSubjects = [
-                        { name: "Mathematics", value: 35, averageScore: 78 },
-                        { name: "Physics", value: 25, averageScore: 82 },
-                        { name: "Chemistry", value: 20, averageScore: 75 },
-                        { name: "Biology", value: 20, averageScore: 80 },
-                    ];
-                    const placeholderPerformance = [
-                        { name: "Mathematics", score: 78, questions: 150 },
-                        { name: "Physics", score: 82, questions: 120 },
-                        { name: "Chemistry", score: 75, questions: 100 },
-                        { name: "Biology", score: 80, questions: 80 },
-                    ];
-                    
-                    console.log('📊 [PROGRESS_CHARTS] Timeout: Setting placeholder data');
-                    setProgressData(placeholderProgress);
-                    setSubjectData(placeholderSubjects);
-                    setPerformanceData(placeholderPerformance);
-                }
-            }, 5000); // 5 second timeout
-
+        console.log('🔍 [PROGRESS_CHARTS] Analytics prop received:', analytics);
+        
+        if (analytics) {
+            console.log('📊 [PROGRESS_CHARTS] Processing analytics data:', analytics);
+            processAnalyticsData(analytics);
+        } else if (user?._id) {
+            // Fallback: if no analytics prop, fetch it ourselves
+            console.log('📊 [PROGRESS_CHARTS] No analytics prop, fetching data...');
             fetchAnalytics();
-
-            return () => clearTimeout(timeoutId);
         }
-    }, [user?._id]);
+    }, [analytics, user?._id]);
+
+    const processAnalyticsData = (analyticsData: Analytics) => {
+        console.log('🔄 [PROGRESS_CHARTS] Processing analytics data...');
+        setLoading(true);
+        
+        try {
+            // Check if we have real data (more than 5 tests)
+            if (analyticsData.recent_results && analyticsData.recent_results.length >= 5) {
+                console.log('✅ [PROGRESS_CHARTS] Using real data with', analyticsData.recent_results.length, 'tests');
+                setHasRealData(true);
+                
+                // Process recent results for progress chart
+                const progress = analyticsData.recent_results
+                    .slice(-10) // Show last 10 tests
+                    .reverse()
+                    .map((result, index) => ({
+                        name: `Test ${analyticsData.recent_results.length - 9 + index}`,
+                        score: Math.round((result.score / result.total_questions) * 100),
+                        date: new Date(result.date).toLocaleDateString()
+                    }));
+                console.log('📈 [PROGRESS_CHARTS] Setting progress data:', progress);
+                setProgressData(progress);
+                
+                // Process topic stats for subject distribution
+                if (analyticsData.topic_stats && Object.keys(analyticsData.topic_stats).length > 0) {
+                    const subjects = Object.entries(analyticsData.topic_stats)
+                        .filter(([_, stats]) => stats.count > 0)
+                        .map(([topic, stats]) => ({
+                            name: topic,
+                            value: stats.count,
+                            averageScore: Math.round(stats.average_score)
+                        }))
+                        .sort((a, b) => b.value - a.value); // Sort by count
+                    console.log('📊 [PROGRESS_CHARTS] Setting subject data:', subjects);
+                    setSubjectData(subjects);
+                }
+                
+                // Create performance data for bar chart
+                const performance = Object.entries(analyticsData.topic_stats || {})
+                    .filter(([_, stats]) => stats.count > 0)
+                    .map(([topic, stats]) => ({
+                        name: topic,
+                        score: Math.round(stats.average_score),
+                        questions: stats.total_questions
+                    }))
+                    .sort((a, b) => b.score - a.score); // Sort by average score
+                console.log('📊 [PROGRESS_CHARTS] Setting performance data:', performance);
+                setPerformanceData(performance);
+                
+            } else {
+                console.log('📊 [PROGRESS_CHARTS] Using placeholder data (less than 5 tests)');
+                setHasRealData(false);
+                setPlaceholderData();
+            }
+        } catch (error) {
+            console.error('❌ [PROGRESS_CHARTS] Error processing analytics:', error);
+            setHasRealData(false);
+            setPlaceholderData();
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const setPlaceholderData = () => {
+        const placeholderProgress = [
+            { name: "Test 1", score: 65, date: "2024-01-15" },
+            { name: "Test 2", score: 72, date: "2024-01-20" },
+            { name: "Test 3", score: 78, date: "2024-01-25" },
+            { name: "Test 4", score: 85, date: "2024-01-30" },
+            { name: "Test 5", score: 88, date: "2024-02-05" },
+        ];
+        const placeholderSubjects = [
+            { name: "Mathematics", value: 35, averageScore: 78 },
+            { name: "Physics", value: 25, averageScore: 82 },
+            { name: "Chemistry", value: 20, averageScore: 75 },
+            { name: "Biology", value: 20, averageScore: 80 },
+        ];
+        const placeholderPerformance = [
+            { name: "Mathematics", score: 78, questions: 150 },
+            { name: "Physics", score: 82, questions: 120 },
+            { name: "Chemistry", score: 75, questions: 100 },
+            { name: "Biology", score: 80, questions: 80 },
+        ];
+        
+        console.log('📊 [PROGRESS_CHARTS] Setting placeholder data');
+        setProgressData(placeholderProgress);
+        setSubjectData(placeholderSubjects);
+        setPerformanceData(placeholderPerformance);
+    };
 
     const fetchAnalytics = async () => {
         try {

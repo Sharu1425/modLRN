@@ -37,6 +37,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         totalQuestions: 0,
         topicsStudied: 0
     });
+    const [analytics, setAnalytics] = useState<Analytics | null>(null);
     const [recentTests, setRecentTests] = useState<TestResult[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -59,14 +60,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             const response = await api.get(url);
             
             if (response.data.success) {
-                const analytics: Analytics = response.data.analytics;
+                const analyticsData: Analytics = response.data.analytics;
                 console.log('📊 [DASHBOARD] Analytics loaded for user:', user.email);
+                console.log('📊 [DASHBOARD] Analytics data:', analyticsData);
+                
+                setAnalytics(analyticsData);
                 
                 const newStats = {
-                    completedAssessments: analytics.total_assessments || 0,
-                    averageScore: analytics.average_score || 0,
-                    totalQuestions: analytics.total_questions || 0,
-                    topicsStudied: analytics.topics?.length || 0
+                    completedAssessments: analyticsData.total_assessments || 0,
+                    averageScore: analyticsData.average_score || 0,
+                    totalQuestions: analyticsData.total_questions || 0,
+                    topicsStudied: analyticsData.topics?.length || 0
                 };
                 
                 setStats(newStats);
@@ -284,7 +288,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                                 transition={{ delay: 0.4 }}
                                 className="mb-8"
                             >
-                                <ProgressCharts user={user} />
+                                <ProgressCharts user={user} analytics={analytics} />
                             </motion.div>
                         )}
 
