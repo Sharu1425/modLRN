@@ -58,15 +58,13 @@ async def test_database_connection():
 async def create_result(result_data: ResultCreate, user_id: str = Depends(get_current_user_id)):
     """Create a new assessment result"""
     try:
-        print(f"📝 [CREATE_RESULT] Starting result creation for user {user_id}")
-        print(f"📝 [CREATE_RESULT] Result data: {result_data.dict()}")
+        print(f"📝 User {user_id} submitting assessment result for topic: {result_data.topic}")
         
         # Get database with timeout
         try:
             db = await get_db()
-            print(f"✅ [CREATE_RESULT] Database connection established")
         except Exception as e:
-            print(f"❌ [CREATE_RESULT] Database connection failed: {e}")
+            print(f"❌ Database connection failed")
             raise HTTPException(
                 status_code=503,
                 detail="Database connection failed. Please try again."
@@ -74,7 +72,7 @@ async def create_result(result_data: ResultCreate, user_id: str = Depends(get_cu
         
         # Validate required fields
         if not result_data.user_id or result_data.score is None or not result_data.questions:
-            print(f"❌ [CREATE_RESULT] Missing required fields")
+            print(f"❌ Missing required fields for user {user_id}")
             raise HTTPException(
                 status_code=400,
                 detail="Missing required fields for result creation"
@@ -83,9 +81,8 @@ async def create_result(result_data: ResultCreate, user_id: str = Depends(get_cu
         # Validate user_id format
         try:
             user_object_id = ObjectId(result_data.user_id)
-            print(f"✅ [CREATE_RESULT] User ID validated: {user_object_id}")
         except Exception as e:
-            print(f"❌ [CREATE_RESULT] Invalid user ID format: {e}")
+            print(f"❌ Invalid user ID format for user {user_id}")
             raise HTTPException(
                 status_code=400,
                 detail="Invalid user ID format"
@@ -96,7 +93,7 @@ async def create_result(result_data: ResultCreate, user_id: str = Depends(get_cu
         incorrect_answers = result_data.total_questions - result_data.score
         percentage = (correct_answers / result_data.total_questions) * 100 if result_data.total_questions > 0 else 0
         
-        print(f"📊 [CREATE_RESULT] Calculated metrics - Score: {correct_answers}/{result_data.total_questions}, Percentage: {percentage:.2f}%")
+        print(f"📊 User {user_id} scored {correct_answers}/{result_data.total_questions} ({percentage:.1f}%) on {result_data.difficulty} {result_data.topic}")
         
         # Create result document with enhanced data
         result_doc = {
@@ -115,15 +112,13 @@ async def create_result(result_data: ResultCreate, user_id: str = Depends(get_cu
             "date": datetime.utcnow()
         }
         
-        print(f"📝 [CREATE_RESULT] Inserting result into database...")
-        
         # Insert into database with timeout handling
         try:
             result = await db.results.insert_one(result_doc)
             result_doc["_id"] = result.inserted_id
-            print(f"✅ [CREATE_RESULT] Result created successfully with ID: {result.inserted_id}")
+            print(f"✅ Assessment result saved successfully for user {user_id}")
         except Exception as e:
-            print(f"❌ [CREATE_RESULT] Database insertion failed: {e}")
+            print(f"❌ Database insertion failed for user {user_id}")
             raise HTTPException(
                 status_code=500,
                 detail="Failed to save result to database. Please try again."
@@ -148,9 +143,7 @@ async def create_result(result_data: ResultCreate, user_id: str = Depends(get_cu
         # Re-raise HTTP exceptions as-is
         raise
     except Exception as e:
-        print(f"❌ [CREATE_RESULT] Unexpected error: {e}")
-        import traceback
-        print(f"❌ [CREATE_RESULT] Traceback: {traceback.format_exc()}")
+        print(f"❌ Unexpected error for user {user_id}")
         raise HTTPException(
             status_code=500,
             detail=f"An unexpected error occurred: {str(e)}"
@@ -160,31 +153,23 @@ async def create_result(result_data: ResultCreate, user_id: str = Depends(get_cu
 async def get_user_results(user_id: str, current_user_id: str = Depends(get_current_user_id)):
     """Get all results for a specific user with enhanced data"""
     try:
-        print(f"🔍 [GET_USER_RESULTS] Starting request for user_id: {user_id}")
-        print(f"🔍 [GET_USER_RESULTS] Current user_id: {current_user_id}")
+        print(f"📋 User {current_user_id} requesting results")
         
         # Ensure user can only access their own results
         if user_id != current_user_id:
-            print(f"❌ [GET_USER_RESULTS] Access denied: {user_id} != {current_user_id}")
+            print(f"❌ Access denied: user {current_user_id} trying to access results for {user_id}")
             raise HTTPException(status_code=403, detail="Access denied")
         
-        print(f"✅ [GET_USER_RESULTS] Access granted, proceeding...")
-        
         db = await get_db()
-        print(f"📊 [GET_USER_RESULTS] Database connection established")
         
         # Get results sorted by date (newest first)
-        print(f"🔍 [GET_USER_RESULTS] Querying database for user_id: {user_id}")
         query = {"user_id": ObjectId(user_id)}
-        print(f"🔍 [GET_USER_RESULTS] Query: {query}")
-        
         results = await db.results.find(query).sort("date", -1).to_list(None)
-        print(f"📋 [GET_USER_RESULTS] Found {len(results)} results in database")
+        print(f"📋 Found {len(results)} assessment results for user {user_id}")
         
         # Format results for response with enhanced data
         formatted_results = []
-        for i, result in enumerate(results):
-            print(f"📝 [GET_USER_RESULTS] Processing result {i+1}/{len(results)}: {result.get('_id')}")
+        for result in results:
             percentage = result.get("percentage", (result["score"] / result["total_questions"]) * 100)
             formatted_result = {
                 "id": str(result["_id"]),
@@ -197,24 +182,16 @@ async def get_user_results(user_id: str, current_user_id: str = Depends(get_curr
                 "date": result["date"].isoformat()
             }
             formatted_results.append(formatted_result)
-            print(f"✅ [GET_USER_RESULTS] Formatted result {i+1}: {formatted_result}")
         
-        response_data = {
+        print(f"✅ Returning {len(formatted_results)} results to user {user_id}")
+        
+        return {
             "success": True,
             "results": formatted_results
         }
         
-        print(f"✅ [GET_USER_RESULTS] Returning {len(formatted_results)} results")
-        print(f"📊 [GET_USER_RESULTS] Response data: {response_data}")
-        
-        return response_data
-        
     except Exception as e:
-        print(f"❌ [GET_USER_RESULTS] Error fetching user results: {e}")
-        print(f"❌ [GET_USER_RESULTS] Error type: {type(e)}")
-        print(f"❌ [GET_USER_RESULTS] Error details: {str(e)}")
-        import traceback
-        print(f"❌ [GET_USER_RESULTS] Traceback: {traceback.format_exc()}")
+        print(f"❌ Error fetching results for user {user_id}")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to fetch results: {str(e)}"
@@ -224,20 +201,26 @@ async def get_user_results(user_id: str, current_user_id: str = Depends(get_curr
 async def get_result(result_id: str, current_user_id: str = Depends(get_current_user_id)):
     """Get a specific result by ID with detailed information"""
     try:
+        print(f"📋 [RESULT] User {current_user_id} requesting specific result {result_id}")
+        
         db = await get_db()
         
         # Get result
         result = await db.results.find_one({"_id": ObjectId(result_id)})
         
         if not result:
+            print(f"❌ [RESULT] Result {result_id} not found")
             raise HTTPException(status_code=404, detail="Result not found")
         
         # Ensure user can only access their own results
         if str(result["user_id"]) != current_user_id:
+            print(f"❌ [RESULT] Access denied: user {current_user_id} trying to access result {result_id} owned by {result['user_id']}")
             raise HTTPException(status_code=403, detail="Access denied")
         
         # Calculate percentage if not stored
         percentage = result.get("percentage", (result["score"] / result["total_questions"]) * 100)
+        
+        print(f"✅ [RESULT] Returning detailed result {result_id} to user {current_user_id}")
         
         return {
             "success": True,
@@ -260,7 +243,7 @@ async def get_result(result_id: str, current_user_id: str = Depends(get_current_
         }
         
     except Exception as e:
-        print(f"Error fetching result: {e}")
+        print(f"❌ [RESULT] Error fetching result {result_id} for user {current_user_id}: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to fetch result: {str(e)}"
@@ -270,16 +253,20 @@ async def get_result(result_id: str, current_user_id: str = Depends(get_current_
 async def get_detailed_result(result_id: str, current_user_id: str = Depends(get_current_user_id)):
     """Get detailed result with question reviews and explanations"""
     try:
+        print(f"📋 [RESULT] User {current_user_id} requesting detailed result {result_id}")
+        
         db = await get_db()
         
         # Get result
         result = await db.results.find_one({"_id": ObjectId(result_id)})
         
         if not result:
+            print(f"❌ [RESULT] Detailed result {result_id} not found")
             raise HTTPException(status_code=404, detail="Result not found")
         
         # Ensure user can only access their own results
         if str(result["user_id"]) != current_user_id:
+            print(f"❌ [RESULT] Access denied: user {current_user_id} trying to access detailed result {result_id}")
             raise HTTPException(status_code=403, detail="Access denied")
         
         # Calculate metrics
@@ -328,6 +315,8 @@ async def get_detailed_result(result_id: str, current_user_id: str = Depends(get
             )
             question_reviews.append(question_review)
         
+        print(f"✅ [RESULT] Returning detailed result {result_id} with {len(question_reviews)} question reviews to user {current_user_id}")
+        
         return DetailedResultResponse(
             success=True,
             result=detailed_result,
@@ -335,7 +324,7 @@ async def get_detailed_result(result_id: str, current_user_id: str = Depends(get
         )
         
     except Exception as e:
-        print(f"Error fetching detailed result: {e}")
+        print(f"❌ [RESULT] Error fetching detailed result {result_id} for user {current_user_id}: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to fetch detailed result: {str(e)}"
@@ -345,29 +334,22 @@ async def get_detailed_result(result_id: str, current_user_id: str = Depends(get
 async def get_user_analytics(user_id: str, current_user_id: str = Depends(get_current_user_id)):
     """Get analytics for a user"""
     try:
-        print(f"🔍 [ANALYTICS] Analytics endpoint called - User: {user_id}")
-        print(f"🔍 [ANALYTICS] Current user: {current_user_id}")
+        print(f"📊 User {current_user_id} requesting analytics")
         
         # Ensure user can only access their own analytics
         if user_id != current_user_id:
-            print(f"❌ [ANALYTICS] Access denied: {user_id} != {current_user_id}")
+            print(f"❌ Access denied: user {current_user_id} trying to access analytics for {user_id}")
             raise HTTPException(status_code=403, detail="Access denied")
         
-        print(f"✅ [ANALYTICS] Access granted, proceeding...")
-        
         db = await get_db()
-        print(f"📊 [ANALYTICS] Database connection established")
         
         # Get all results for user
-        print(f"🔍 [ANALYTICS] Querying database for user_id: {user_id}")
         query = {"user_id": ObjectId(user_id)}
-        print(f"🔍 [ANALYTICS] Query: {query}")
-        
         results = await db.results.find(query).to_list(None)
-        print(f"📋 [ANALYTICS] Found {len(results)} results in database")
+        print(f"📊 Found {len(results)} assessment results for user {user_id}")
         
         if not results:
-            print(f"📊 [ANALYTICS] No results found, returning empty analytics")
+            print(f"📊 No results found for user {user_id}, returning empty analytics")
             return {
                 "success": True,
                 "analytics": {
@@ -380,17 +362,15 @@ async def get_user_analytics(user_id: str, current_user_id: str = Depends(get_cu
             }
         
         # Calculate analytics
-        print(f"📊 [ANALYTICS] Calculating analytics...")
         total_assessments = len(results)
         total_score = sum(r["score"] for r in results)
         average_score = total_score / total_assessments if total_assessments > 0 else 0
         total_questions = sum(r["total_questions"] for r in results)
         
-        print(f"📊 [ANALYTICS] Basic stats - Total: {total_assessments}, Avg Score: {average_score}, Total Questions: {total_questions}")
+        print(f"📊 User {user_id} analytics - {total_assessments} assessments, avg score: {average_score:.1f}, total questions: {total_questions}")
         
         # Get unique topics
         topics = list(set(r["topic"] for r in results))
-        print(f"📊 [ANALYTICS] Topics found: {topics}")
         
         # Get recent performance (last 5 assessments)
         recent_results = sorted(results, key=lambda x: x["date"], reverse=True)[:5]
@@ -404,7 +384,6 @@ async def get_user_analytics(user_id: str, current_user_id: str = Depends(get_cu
             }
             for r in recent_results
         ]
-        print(f"📊 [ANALYTICS] Recent performance calculated: {len(recent_performance)} items")
         
         # Get topic statistics
         topic_stats = {}
@@ -421,7 +400,7 @@ async def get_user_analytics(user_id: str, current_user_id: str = Depends(get_cu
             stats = topic_stats[topic]
             stats["average_score"] = stats["total_score"] / stats["count"] if stats["count"] > 0 else 0
         
-        print(f"📊 [ANALYTICS] Topic stats calculated: {len(topic_stats)} topics")
+        print(f"📊 Calculated analytics for {len(topics)} topics for user {user_id}")
         
         analytics_data = {
             "total_assessments": total_assessments,
@@ -432,7 +411,7 @@ async def get_user_analytics(user_id: str, current_user_id: str = Depends(get_cu
             "topic_stats": topic_stats
         }
         
-        print(f"📊 [ANALYTICS] Final analytics data: {analytics_data}")
+        print(f"✅ Returning analytics to user {user_id}")
         
         return {
             "success": True,
@@ -440,11 +419,7 @@ async def get_user_analytics(user_id: str, current_user_id: str = Depends(get_cu
         }
         
     except Exception as e:
-        print(f"❌ [ANALYTICS] Error fetching user analytics: {e}")
-        print(f"❌ [ANALYTICS] Error type: {type(e)}")
-        print(f"❌ [ANALYTICS] Error details: {str(e)}")
-        import traceback
-        print(f"❌ [ANALYTICS] Traceback: {traceback.format_exc()}")
+        print(f"❌ Error fetching analytics for user {user_id}")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to fetch analytics: {str(e)}"
@@ -458,6 +433,8 @@ async def get_results_by_topic(
 ):
     """Get results filtered by topic and optional difficulty"""
     try:
+        print(f"📋 [RESULTS] User {current_user_id} requesting results for topic: {topic}" + (f" (difficulty: {difficulty})" if difficulty else ""))
+        
         db = await get_db()
         
         # Build query
@@ -471,6 +448,7 @@ async def get_results_by_topic(
         
         # Get results
         results = await db.results.find(query).sort("date", -1).to_list(None)
+        print(f"📋 [RESULTS] Found {len(results)} results for topic '{topic}' for user {current_user_id}")
         
         # Format results
         formatted_results = []
@@ -484,13 +462,15 @@ async def get_results_by_topic(
                 "date": result["date"].isoformat()
             })
         
+        print(f"✅ [RESULTS] Returning {len(formatted_results)} topic results to user {current_user_id}")
+        
         return {
             "success": True,
             "results": formatted_results
         }
         
     except Exception as e:
-        print(f"Error fetching results by topic: {e}")
+        print(f"❌ [RESULTS] Error fetching topic results for user {current_user_id}: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to fetch results: {str(e)}"

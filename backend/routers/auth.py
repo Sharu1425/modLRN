@@ -33,7 +33,7 @@ sessions = {}
 async def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[str]:
     """Get current user ID from JWT token"""
     try:
-        print(f"🔍 Verifying token: {credentials.credentials[:20]}...")
+        print(f"🔍 Verifying token...")
         payload = verify_token(credentials.credentials)
         user_id = payload.get("sub")
         if user_id is None:
@@ -42,10 +42,10 @@ async def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depend
         print(f"✅ Token verified for user: {user_id}")
         return str(user_id)  # Ensure it's a string
     except JWTError as e:
-        print(f"❌ JWT verification failed: {e}")
+        print(f"❌ JWT verification failed")
         raise HTTPException(status_code=401, detail="Invalid token")
     except Exception as e:
-        print(f"❌ Unexpected error in token verification: {e}")
+        print(f"❌ Unexpected error in token verification")
         raise HTTPException(status_code=401, detail="Invalid token")
 
 @router.post("/register")
@@ -141,11 +141,11 @@ async def login_user(user_data: UserLogin):
 async def face_login(face_data: FaceLoginRequest):
     """Login using face recognition"""
     try:
-        print(f"👤 [FACE_LOGIN] Face recognition login attempt")
+        print(f"👤 Face login attempt received")
         
         # Validate face descriptor
         if not face_data.face_descriptor or len(face_data.face_descriptor) != 128:
-            print("❌ [FACE_LOGIN] Invalid face descriptor format")
+            print("❌ Invalid face descriptor format")
             raise HTTPException(status_code=400, detail="Invalid face descriptor format")
         
         db = await get_db()
@@ -154,10 +154,10 @@ async def face_login(face_data: FaceLoginRequest):
         users_with_faces = await db.users.find({
             "face_descriptor": {"$exists": True, "$ne": None}
         }).to_list(None)
-        print(f"👤 [FACE_LOGIN] Found {len(users_with_faces)} registered users with face data")
+        print(f"👤 Checking {len(users_with_faces)} registered faces")
         
         if not users_with_faces:
-            print("❌ [FACE_LOGIN] No registered faces found in database")
+            print("❌ No registered faces found")
             raise HTTPException(
                 status_code=401, 
                 detail="No registered faces found. Please register your face first in your profile settings."
@@ -177,7 +177,7 @@ async def face_login(face_data: FaceLoginRequest):
                     best_match = user
         
         if not best_match or best_distance >= threshold:
-            print(f"❌ [FACE_LOGIN] Face recognition failed - best distance: {best_distance:.3f} (threshold: {threshold})")
+            print(f"❌ Face recognition failed (distance: {best_distance:.3f})")
             raise HTTPException(status_code=401, detail="Face recognition failed")
         
         # Create access token
@@ -185,7 +185,7 @@ async def face_login(face_data: FaceLoginRequest):
             data={"sub": str(best_match["_id"]), "email": best_match["email"]}
         )
         
-        print(f"✅ [FACE_LOGIN] Face recognition successful for user: {best_match['email']} (distance: {best_distance:.3f})")
+        print(f"✅ Face login successful for user: {best_match['email']}")
         return {
             "success": True,
             "message": "Face login successful",
@@ -199,14 +199,14 @@ async def face_login(face_data: FaceLoginRequest):
             }
         }
     except Exception as e:
-        print(f"❌ [FACE_LOGIN] Error during face login: {str(e)}")
+        print(f"❌ Face login failed")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/face-status")
 async def get_face_status(user_id: str = Depends(get_current_user_id)):
     """Check if user has registered face"""
     try:
-        print(f"🔍 Checking face status for user: {user_id}")
+        print(f"🔍 Face status check for user: {user_id}")
         
         db = await get_db()
         from bson import ObjectId
@@ -225,21 +225,18 @@ async def get_face_status(user_id: str = Depends(get_current_user_id)):
             "has_face": has_face
         }
     except Exception as e:
-        print(f"❌ Face status check error: {e}")
+        print(f"❌ Face status check failed")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/register-face")
 async def register_face(face_data: FaceLoginRequest, user_id: str = Depends(get_current_user_id)):
     """Register face descriptor for user"""
     try:
-        print(f"🔍 Register face request received for user: {user_id}")
-        print(f"🔍 Face descriptor type: {type(face_data.face_descriptor)}")
-        print(f"🔍 Face descriptor length: {len(face_data.face_descriptor)}")
-        print(f"🔍 First few values: {face_data.face_descriptor[:5]}")
+        print(f"🔍 Face registration requested for user: {user_id}")
         
         # Validate face descriptor
         if not face_data.face_descriptor or len(face_data.face_descriptor) != 128:
-            print("❌ Invalid face descriptor length")
+            print("❌ Invalid face descriptor format")
             raise HTTPException(status_code=400, detail="Invalid face descriptor format")
         
         db = await get_db()
@@ -251,30 +248,26 @@ async def register_face(face_data: FaceLoginRequest, user_id: str = Depends(get_
             {"$set": {"face_descriptor": face_data.face_descriptor}}
         )
         
-        print(f"🔍 Update result: {result.modified_count} documents modified")
-        
         if result.modified_count == 0:
-            print("❌ User not found")
+            print("❌ User not found for face registration")
             raise HTTPException(status_code=404, detail="User not found")
         
-        print("✅ Face registered successfully")
+        print(f"✅ Face registration successful for user: {user_id}")
         return {
             "success": True,
             "message": "Face registered successfully"
         }
     except Exception as e:
-        print(f"❌ Register face error: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"❌ Face registration failed for user {user_id}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/google")
 async def google_oauth():
     """Initiate Google OAuth flow"""
-    print(f"🔐 [GOOGLE_OAUTH] Initiating Google OAuth flow")
+    print(f"🔐 Google OAuth initiated")
     
     if not GOOGLE_CLIENT_ID or GOOGLE_CLIENT_ID == "your-google-client-id":
-        print("❌ [GOOGLE_OAUTH] Configuration error - missing GOOGLE_CLIENT_ID")
+        print("❌ Google OAuth not configured")
         raise HTTPException(
             status_code=500, 
             detail="Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your environment variables."
@@ -292,22 +285,22 @@ async def google_oauth():
     
     query_string = "&".join([f"{k}={v}" for k, v in params.items()])
     final_url = f"{auth_url}?{query_string}"
-    print(f"🔐 [GOOGLE_OAUTH] Redirecting user to Google OAuth")
+    print(f"🔐 Redirecting user to Google OAuth")
     return RedirectResponse(url=final_url)
 
 @router.get("/google/callback")
 async def google_oauth_callback(code: str):
     """Handle Google OAuth callback"""
-    print(f"🔐 [GOOGLE_OAUTH] Processing callback from Google")
+    print(f"🔐 Processing Google OAuth callback")
     try:
         if not GOOGLE_CLIENT_SECRET or GOOGLE_CLIENT_SECRET == "your-google-client-secret":
-            print("❌ [GOOGLE_OAUTH] Configuration error - missing GOOGLE_CLIENT_SECRET")
+            print("❌ Google OAuth not configured")
             raise HTTPException(
                 status_code=500, 
                 detail="Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your environment variables."
             )
         
-        print(f"🔐 [GOOGLE_OAUTH] Exchanging authorization code for tokens")
+        print(f"🔐 Exchanging authorization code for tokens")
         # Exchange code for tokens
         token_url = "https://oauth2.googleapis.com/token"
         token_data = {
@@ -321,12 +314,12 @@ async def google_oauth_callback(code: str):
         async with httpx.AsyncClient() as client:
             token_response = await client.post(token_url, data=token_data)
             if not token_response.is_success:
-                print(f"❌ [GOOGLE_OAUTH] Token exchange failed")
+                print(f"❌ Token exchange failed")
                 raise HTTPException(status_code=400, detail="Token exchange failed")
             token_response.raise_for_status()
             tokens = token_response.json()
         
-        print(f"🔐 [GOOGLE_OAUTH] Fetching user profile from Google")
+        print(f"🔐 Fetching user profile from Google")
         # Get user info
         user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
         headers = {"Authorization": f"Bearer {tokens['access_token']}"}
@@ -334,20 +327,20 @@ async def google_oauth_callback(code: str):
         async with httpx.AsyncClient() as client:
             user_response = await client.get(user_info_url, headers=headers)
             if not user_response.is_success:
-                print(f"❌ [GOOGLE_OAUTH] Failed to fetch user info")
+                print(f"❌ Failed to fetch user info")
                 raise HTTPException(status_code=400, detail="Failed to fetch user info")
             user_response.raise_for_status()
             user_info = user_response.json()
         
         user_email = user_info.get('email', 'Unknown')
-        print(f"🔐 [GOOGLE_OAUTH] User authenticated: {user_email}")
+        print(f"🔐 Google OAuth successful for user: {user_email}")
         
         # Create or update user
         db = await get_db()
         user = await db.users.find_one({"email": user_info["email"]})
         
         if not user:
-            print(f"👤 [USER] Creating new user via Google OAuth: {user_email}")
+            print(f"👤 Creating new user via Google OAuth: {user_email}")
             # Create new user
             user_doc = {
                 "email": user_info["email"],
@@ -359,7 +352,7 @@ async def google_oauth_callback(code: str):
             result = await db.users.insert_one(user_doc)
             user_id = result.inserted_id
         else:
-            print(f"👤 [USER] Updating existing user via Google OAuth: {user_email}")
+            print(f"👤 Updating existing user via Google OAuth: {user_email}")
             # Update existing user
             await db.users.update_one(
                 {"_id": user["_id"]},

@@ -72,14 +72,14 @@ const Assessment: React.FC<AssessmentProps> = ({ user }) => {
 
     const fetchQuestions = useCallback(async () => {
         try {
-            console.log("🔍 Fetching assessment configuration...");
+            console.log("📋 [ASSESSMENT] Fetching assessment configuration...");
             const configResponse = await api.get("/api/topic");
                         
             if (!configResponse.data.success) {
                 throw new Error(configResponse.data.error || 'Failed to get assessment configuration');
             }
             const { topic, qnCount, difficulty } = configResponse.data;
-            console.log("✅ Config received:", { topic, qnCount, difficulty });
+            console.log("✅ [ASSESSMENT] Config received - Topic:", topic, "Questions:", qnCount, "Difficulty:", difficulty);
                         
             const assessmentConfig: AssessmentConfig = {
                 topic,
@@ -93,7 +93,7 @@ const Assessment: React.FC<AssessmentProps> = ({ user }) => {
             const totalTime = getDifficultyTime(difficulty, qnCount);
             setTimeRemaining(totalTime);
                         
-            console.log("🔍 Fetching questions from Gemini...");
+            console.log("🤖 [ASSESSMENT] Fetching questions from Gemini AI...");
             const geminiResponse = await api.get("/db/questions", {
                 params: {
                     topic,
@@ -102,7 +102,7 @@ const Assessment: React.FC<AssessmentProps> = ({ user }) => {
                 }
             });
                         
-            console.log("✅ Questions received:", geminiResponse.data);
+            console.log("✅ [ASSESSMENT] Questions received from Gemini AI");
                         
             if (!Array.isArray(geminiResponse.data) || geminiResponse.data.length === 0) {
                 throw new Error('No questions were generated. Please try again.');
@@ -111,7 +111,7 @@ const Assessment: React.FC<AssessmentProps> = ({ user }) => {
             setQuestions(geminiResponse.data);
             setLoading(false);
         } catch (error: any) {
-            console.error("❌ Error fetching questions:", error);
+            console.error("❌ [ASSESSMENT] Error fetching questions:", error);
             let errorMessage = 'Failed to load questions';
                         
             if (error.response?.data?.detail) {
@@ -138,12 +138,12 @@ const Assessment: React.FC<AssessmentProps> = ({ user }) => {
             // Calculate time taken
             const totalTime = getDifficultyTime(config.difficulty, config.qnCount);
             const timeTaken = Math.max(0, totalTime - (timeRemaining || 0));
-            console.log(`⏱️ [TIME_CALC] Total time: ${totalTime}s, Time remaining: ${timeRemaining}s, Time taken: ${timeTaken}s`);
+            console.log(`⏱️ [ASSESSMENT] Assessment completed - Time taken: ${timeTaken}s, Score: ${finalScore}/${config.qnCount}`);
 
             // Fetch explanations for questions
             let explanations = [];
             try {
-                console.log("🔍 Fetching explanations for questions...");
+                console.log("🤖 [ASSESSMENT] Fetching explanations from Gemini AI...");
                 const explanationsResponse = await api.post("/db/questions/explanations", {
                     questions: questions,
                     topic: config.topic,
@@ -152,9 +152,9 @@ const Assessment: React.FC<AssessmentProps> = ({ user }) => {
                 
                 if (explanationsResponse.data.success) {
                     explanations = explanationsResponse.data.explanations;
-                    console.log("✅ Explanations received:", explanations);
+                    console.log("✅ [ASSESSMENT] Explanations received from Gemini AI");
                 } else {
-                    console.log("⚠️ Explanations not available, continuing without them");
+                    console.log("⚠️ [ASSESSMENT] Explanations not available, continuing without them");
                 }
             } catch (error) {
                 console.error("❌ Error fetching explanations:", error);

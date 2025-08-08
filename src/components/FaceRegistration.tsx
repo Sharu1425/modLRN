@@ -32,20 +32,23 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onSuccess, onCancel
 
     const checkFaceStatus = async () => {
         try {
+            console.log('👤 [FACE_REG] Checking face registration status...');
             setCheckingFaceStatus(true);
             const token = localStorage.getItem('access_token');
             
             if (!token) {
+                console.log('❌ [FACE_REG] No access token found');
                 setFaceRegistrationError("Please log in first to register your face.");
                 return;
             }
             
             const response = await api.get("/auth/face-status");
             if (response.data.success) {
+                console.log('✅ [FACE_REG] Face status checked:', response.data.has_face ? 'Face registered' : 'No face registered');
                 setHasRegisteredFace(response.data.has_face);
             }
         } catch (error: any) {
-            console.error("Error checking face status:", error);
+            console.error("❌ [FACE_REG] Error checking face status:", error);
             if (error.response?.status === 401) {
                 setFaceRegistrationError("Please log in first to register your face.");
             }
@@ -56,14 +59,16 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onSuccess, onCancel
 
     const loadFaceModels = async () => {
         try {
+            console.log('🔍 [FACE_REG] Loading face detection models...');
             await Promise.all([
                 faceapi.nets.tinyFaceDetector.loadFromUri("https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights"),
                 faceapi.nets.faceRecognitionNet.loadFromUri("https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights"),
                 faceapi.nets.faceLandmark68Net.loadFromUri("https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights")
             ]);
+            console.log('✅ [FACE_REG] Face detection models loaded successfully');
             setModelsLoaded(true);
         } catch (error) {
-            console.error("Error loading face detection models:", error);
+            console.error("❌ [FACE_REG] Error loading face detection models:", error);
             setFaceRegistrationError("Failed to load face detection models. Please check your internet connection and try again.");
         }
     };
@@ -72,7 +77,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onSuccess, onCancel
         try {
             setStartingCamera(true);
             setFaceRegistrationError("");
-            console.log("🔍 Starting camera...");
+            console.log("🔍 [FACE_REG] Starting camera...");
             
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 video: {
@@ -82,19 +87,19 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onSuccess, onCancel
                 } 
             });
             
-            console.log("✅ Camera stream obtained:", stream);
+            console.log("✅ [FACE_REG] Camera stream obtained");
             
             if (videoRef.current) {
-                console.log("✅ Video element found, setting srcObject...");
+                console.log("✅ [FACE_REG] Video element found, setting srcObject...");
                 videoRef.current.srcObject = stream;
                 
                 // Ensure video starts playing
                 videoRef.current.onloadedmetadata = () => {
-                    console.log("✅ Video metadata loaded, starting playback...");
+                    console.log("✅ [FACE_REG] Video metadata loaded, starting playback...");
                     videoRef.current?.play().then(() => {
-                        console.log("✅ Video playback started successfully");
+                        console.log("✅ [FACE_REG] Video playback started successfully");
                     }).catch(err => {
-                        console.error("❌ Error starting video playback:", err);
+                        console.error("❌ [FACE_REG] Error starting video playback:", err);
                     });
                 };
                 
@@ -183,26 +188,33 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onSuccess, onCancel
     }, [cameraActive, modelsLoaded, startContinuousFaceDetection]);
 
     const stopVideo = () => {
+        console.log('🔍 [FACE_REG] Stopping camera...');
         if (videoRef.current?.srcObject) {
             const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
             tracks.forEach(track => track.stop());
             videoRef.current.srcObject = null;
             setCameraActive(false);
+            console.log('✅ [FACE_REG] Camera stopped successfully');
+        } else {
+            console.log('❌ [FACE_REG] No video stream to stop');
         }
     };
 
     const registerFace = async () => {
         if (!modelsLoaded || isRegisteringFace || !videoRef.current) {
+            console.log('❌ [FACE_REG] Cannot register face - models not loaded, already registering, or no video');
             return;
         }
         
         // Check authentication first
         const token = localStorage.getItem('access_token');
         if (!token) {
+            console.log('❌ [FACE_REG] No access token found for face registration');
             setFaceRegistrationError("Please log in first to register your face.");
             return;
         }
         
+        console.log('👤 [FACE_REG] Starting face registration...');
         setIsRegisteringFace(true);
         setFaceRegistrationError("");
         setFaceRegistrationSuccess(false);
@@ -210,11 +222,13 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onSuccess, onCancel
         try {
             // Wait for video to be ready
             if (videoRef.current?.readyState < 2) {
+                console.log('🔍 [FACE_REG] Waiting for video to be ready...');
                 await new Promise(resolve => {
                     videoRef.current!.onloadeddata = resolve;
                 });
             }
             
+            console.log('🔍 [FACE_REG] Detecting face for registration...');
             const detectionOptions = new faceapi.TinyFaceDetectorOptions({
                 inputSize: 224,
                 scoreThreshold: 0.5
@@ -226,10 +240,12 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onSuccess, onCancel
                 .withFaceDescriptor();
 
             if (!detections) {
+                console.log('❌ [FACE_REG] No face detected for registration');
                 setFaceRegistrationError("No face detected. Please ensure your face is clearly visible and well-lit in the camera view.");
                 return;
             }
 
+            console.log('✅ [FACE_REG] Face detected, drawing detection results...');
             // Draw face detection results on canvas
             if (canvasRef.current && videoRef.current) {
                 const canvas = canvasRef.current;
@@ -250,21 +266,25 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onSuccess, onCancel
             }
 
             const faceDescriptor = Array.from(detections.descriptor);
+            console.log('🔍 [FACE_REG] Face descriptor generated, length:', faceDescriptor.length);
             
+            console.log('🌐 [FACE_REG] Sending face registration request to API...');
             const response = await api.post("/auth/register-face", {
                 face_descriptor: faceDescriptor
             });
 
             if (response.data.success) {
+                console.log('✅ [FACE_REG] Face registration successful!');
                 setFaceRegistrationSuccess(true);
                 setHasRegisteredFace(true);
                 stopVideo();
                 onSuccess?.();
             } else {
+                console.log('❌ [FACE_REG] Face registration failed:', response.data.error);
                 setFaceRegistrationError(response.data.error || "Failed to register face");
             }
         } catch (error: any) {
-            console.error("Face registration error:", error);
+            console.error("❌ [FACE_REG] Face registration error:", error);
             let errorMessage = "An error occurred during face registration";
             
             if (error.response?.status === 401) {

@@ -65,17 +65,17 @@ async def fetch_questions_from_gemini(
     user_id: str = Depends(get_current_user_id)
 ):
     """Generate questions using Google Gemini AI"""
-    print(f"🤖 [QUESTIONS] User {user_id} requesting {count} {difficulty} questions for topic: {topic}")
+    print(f"🤖 User {user_id} requesting {count} {difficulty} questions for topic: {topic}")
     
     try:
         if not model:
-            print("❌ [QUESTIONS] Gemini API key not configured")
+            print("❌ Gemini API key not configured")
             raise HTTPException(
                 status_code=500, 
                 detail="Gemini API key is not configured properly"
             )
         
-        print(f"🤖 [QUESTIONS] Generating questions via Gemini AI for user {user_id}")
+        print(f"🤖 Generating questions via Gemini AI for user {user_id}")
         
         # Create prompt for Gemini
         prompt = f"""Generate {count} multiple-choice questions on {topic} with {difficulty} difficulty. 
@@ -112,7 +112,7 @@ async def fetch_questions_from_gemini(
             if not isinstance(questions, list):
                 raise ValueError("Response is not a list")
             
-            print(f"🤖 [QUESTIONS] Generated {len(questions)} questions from Gemini AI")
+            print(f"🤖 Generated {len(questions)} questions from Gemini AI")
             
             # Store questions in database
             await add_questions_to_db(topic, difficulty, questions)
@@ -126,25 +126,24 @@ async def fetch_questions_from_gemini(
                     "answer": q["correctAnswer"]
                 })
             
-            print(f"✅ [QUESTIONS] Successfully generated and stored {len(formatted_questions)} questions for user {user_id}")
+            print(f"✅ Successfully generated and stored {len(formatted_questions)} questions for user {user_id}")
             return formatted_questions
             
         except json.JSONDecodeError as e:
-            print(f"Error parsing Gemini response: {e}")
-            print(f"Raw response: {response.text}")
+            print(f"Error parsing Gemini response")
             raise HTTPException(
                 status_code=500,
                 detail="Failed to parse questions from Gemini API"
             )
         except Exception as e:
-            print(f"Error processing Gemini response: {e}")
+            print(f"Error processing Gemini response")
             raise HTTPException(
                 status_code=500,
                 detail="Failed to process questions from Gemini API"
             )
             
     except Exception as e:
-        print(f"Error generating questions: {e}")
+        print(f"Error generating questions")
         if "API key" in str(e):
             raise HTTPException(
                 status_code=500,
@@ -222,7 +221,7 @@ async def generate_explanations(
     user_id: str = Depends(get_current_user_id)
 ):
     """Generate explanations for questions using Google Gemini AI"""
-    print(f"🔍 Explanations endpoint called - User: {user_id}")
+    print(f"🔍 Explanations requested by user: {user_id}")
     
     try:
         questions = questions_data.get("questions", [])
@@ -240,8 +239,6 @@ async def generate_explanations(
         # Check if Gemini is available
         if not model:
             print("❌ Gemini API key not configured")
-            print(f"🔍 GEMINI_API_KEY present: {bool(GEMINI_API_KEY)}")
-            print(f"🔍 GEMINI_API_KEY value: {GEMINI_API_KEY[:10] if GEMINI_API_KEY else 'None'}...")
             
             # Provide fallback explanations
             print("🔄 Providing fallback explanations...")
@@ -299,7 +296,7 @@ Make the explanations:
             print(f"✅ Received response from Gemini API")
             
         except Exception as e:
-            print(f"❌ Gemini API error: {e}")
+            print(f"❌ Gemini API error")
             if "API key" in str(e) or "authentication" in str(e).lower():
                 raise HTTPException(
                     status_code=500,

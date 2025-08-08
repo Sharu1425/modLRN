@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
         await init_db()
         print("🚀 FastAPI Backend Started")
     except Exception as e:
-        print(f"❌ Startup Error: {e}")
+        print(f"❌ Startup Error")
         raise e
     yield
     # Shutdown

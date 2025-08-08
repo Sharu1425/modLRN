@@ -31,10 +31,10 @@ async def init_db():
         
         # Test the connection
         await client.admin.command('ping')
-        print(f"✅ MongoDB Connected: {client.address}")
+        print(f"✅ MongoDB Connected")
         return db
     except Exception as e:
-        print(f"❌ MongoDB Connection Error: {e}")
+        print(f"❌ MongoDB Connection Error")
         raise e
 
 async def get_db():
@@ -48,7 +48,7 @@ async def get_db():
         await client.admin.command('ping')
         return db
     except Exception as e:
-        print(f"❌ Database connection lost, reconnecting: {e}")
+        print(f"❌ Database connection lost, reconnecting...")
         await init_db()
         return db
 
