@@ -337,6 +337,13 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user, analytics }) => {
 
 
 
+    console.log('🎨 [PROGRESS_CHARTS] About to render charts with data:', {
+        progressDataLength: progressData.length,
+        performanceDataLength: performanceData.length,
+        hasRealData,
+        loading
+    });
+
     return (
         <motion.div 
             className="grid grid-cols-1 lg:grid-cols-2 gap-6"
@@ -354,8 +361,10 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user, analytics }) => {
                             </span>
                         )}
                     </div>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={progressData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <div className="h-[300px] w-full">
+                        {progressData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={progressData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8} />
@@ -395,6 +404,12 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user, analytics }) => {
                             />
                         </LineChart>
                     </ResponsiveContainer>
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-gray-400">
+                                <p>No chart data available</p>
+                            </div>
+                        )}
+                    </div>
                 </motion.div>
             </Card>
 
@@ -408,8 +423,10 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user, analytics }) => {
                             </span>
                         )}
                     </div>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={performanceData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <div className="h-[300px] w-full">
+                        {performanceData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={performanceData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                             <XAxis 
                                 dataKey="name" 
@@ -442,6 +459,12 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user, analytics }) => {
                             />
                         </BarChart>
                     </ResponsiveContainer>
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-gray-400">
+                                <p>No chart data available</p>
+                            </div>
+                        )}
+                    </div>
                 </motion.div>
             </Card>
         </motion.div>
