@@ -62,25 +62,31 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
                     console.log('⏰ [PROGRESS_CHARTS] Loading timeout, showing placeholder data');
                     setLoading(false);
                     setHasRealData(false);
-                    setProgressData([
+                    
+                    const placeholderProgress = [
                         { name: "Test 1", score: 65, date: "2024-01-15" },
                         { name: "Test 2", score: 72, date: "2024-01-20" },
                         { name: "Test 3", score: 78, date: "2024-01-25" },
                         { name: "Test 4", score: 85, date: "2024-01-30" },
                         { name: "Test 5", score: 88, date: "2024-02-05" },
-                    ]);
-                    setSubjectData([
+                    ];
+                    const placeholderSubjects = [
                         { name: "Mathematics", value: 35, averageScore: 78 },
                         { name: "Physics", value: 25, averageScore: 82 },
                         { name: "Chemistry", value: 20, averageScore: 75 },
                         { name: "Biology", value: 20, averageScore: 80 },
-                    ]);
-                    setPerformanceData([
+                    ];
+                    const placeholderPerformance = [
                         { name: "Mathematics", score: 78, questions: 150 },
                         { name: "Physics", score: 82, questions: 120 },
                         { name: "Chemistry", score: 75, questions: 100 },
                         { name: "Biology", score: 80, questions: 80 },
-                    ]);
+                    ];
+                    
+                    console.log('📊 [PROGRESS_CHARTS] Timeout: Setting placeholder data');
+                    setProgressData(placeholderProgress);
+                    setSubjectData(placeholderSubjects);
+                    setPerformanceData(placeholderPerformance);
                 }
             }, 5000); // 5 second timeout
 
@@ -115,6 +121,7 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
                             score: Math.round((result.score / result.total_questions) * 100),
                             date: new Date(result.date).toLocaleDateString()
                         }));
+                    console.log('📈 [PROGRESS_CHARTS] Setting progress data:', progress);
                     setProgressData(progress);
                     
                     // Process topic stats for subject distribution
@@ -127,6 +134,7 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
                                 averageScore: Math.round(stats.average_score)
                             }))
                             .sort((a, b) => b.value - a.value); // Sort by count
+                        console.log('📊 [PROGRESS_CHARTS] Setting subject data:', subjects);
                         setSubjectData(subjects);
                     }
                     
@@ -139,31 +147,38 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
                             questions: stats.total_questions
                         }))
                         .sort((a, b) => b.score - a.score); // Sort by average score
+                    console.log('📊 [PROGRESS_CHARTS] Setting performance data:', performance);
                     setPerformanceData(performance);
                     
                 } else {
                     console.log('📊 [PROGRESS_CHARTS] Using placeholder data (less than 5 tests)');
                     // Show placeholder data for users with less than 5 tests
                     setHasRealData(false);
-                    setProgressData([
+                    
+                    const placeholderProgress = [
                         { name: "Test 1", score: 65, date: "2024-01-15" },
                         { name: "Test 2", score: 72, date: "2024-01-20" },
                         { name: "Test 3", score: 78, date: "2024-01-25" },
                         { name: "Test 4", score: 85, date: "2024-01-30" },
                         { name: "Test 5", score: 88, date: "2024-02-05" },
-                    ]);
-                    setSubjectData([
+                    ];
+                    const placeholderSubjects = [
                         { name: "Mathematics", value: 35, averageScore: 78 },
                         { name: "Physics", value: 25, averageScore: 82 },
                         { name: "Chemistry", value: 20, averageScore: 75 },
                         { name: "Biology", value: 20, averageScore: 80 },
-                    ]);
-                    setPerformanceData([
+                    ];
+                    const placeholderPerformance = [
                         { name: "Mathematics", score: 78, questions: 150 },
                         { name: "Physics", score: 82, questions: 120 },
                         { name: "Chemistry", score: 75, questions: 100 },
                         { name: "Biology", score: 80, questions: 80 },
-                    ]);
+                    ];
+                    
+                    console.log('📊 [PROGRESS_CHARTS] Setting placeholder data for < 5 tests');
+                    setProgressData(placeholderProgress);
+                    setSubjectData(placeholderSubjects);
+                    setPerformanceData(placeholderPerformance);
                 }
             } else {
                 throw new Error("Failed to fetch analytics");
@@ -172,32 +187,47 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
             console.error("❌ [PROGRESS_CHARTS] Error fetching analytics:", error);
             // Show placeholder data
             setHasRealData(false);
-            setProgressData([
+            
+            const placeholderProgress = [
                 { name: "Test 1", score: 65, date: "2024-01-15" },
                 { name: "Test 2", score: 72, date: "2024-01-20" },
                 { name: "Test 3", score: 78, date: "2024-01-25" },
                 { name: "Test 4", score: 85, date: "2024-01-30" },
                 { name: "Test 5", score: 88, date: "2024-02-05" },
-            ]);
-            setSubjectData([
+            ];
+            const placeholderSubjects = [
                 { name: "Mathematics", value: 35, averageScore: 78 },
                 { name: "Physics", value: 25, averageScore: 82 },
                 { name: "Chemistry", value: 20, averageScore: 75 },
                 { name: "Biology", value: 20, averageScore: 80 },
-            ]);
-            setPerformanceData([
+            ];
+            const placeholderPerformance = [
                 { name: "Mathematics", score: 78, questions: 150 },
                 { name: "Physics", score: 82, questions: 120 },
                 { name: "Chemistry", score: 75, questions: 100 },
                 { name: "Biology", score: 80, questions: 80 },
-            ]);
+            ];
+            
+            console.log('📊 [PROGRESS_CHARTS] Error: Setting placeholder data');
+            setProgressData(placeholderProgress);
+            setSubjectData(placeholderSubjects);
+            setPerformanceData(placeholderPerformance);
         } finally {
             console.log('✅ [PROGRESS_CHARTS] Setting loading to false');
             setLoading(false);
         }
     };
 
+    console.log('🔍 [PROGRESS_CHARTS] Render state:', {
+        loading,
+        progressDataLength: progressData.length,
+        subjectDataLength: subjectData.length,
+        performanceDataLength: performanceData.length,
+        hasRealData
+    });
+
     if (loading && progressData.length === 0) {
+        console.log('⏳ [PROGRESS_CHARTS] Showing loading spinner');
         return (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {[1, 2].map((i) => (
@@ -208,6 +238,42 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({ user }) => {
             </div>
         );
     }
+
+    // Fallback: if no data after loading, show placeholder
+    if (progressData.length === 0) {
+        console.log('⚠️ [PROGRESS_CHARTS] No data available, showing fallback charts');
+        const fallbackData = [
+            { name: "Test 1", score: 65, date: "2024-01-15" },
+            { name: "Test 2", score: 72, date: "2024-01-20" },
+            { name: "Test 3", score: 78, date: "2024-01-25" },
+            { name: "Test 4", score: 85, date: "2024-01-30" },
+            { name: "Test 5", score: 88, date: "2024-02-05" },
+        ];
+        const fallbackSubjects = [
+            { name: "Mathematics", value: 35, averageScore: 78 },
+            { name: "Physics", value: 25, averageScore: 82 },
+            { name: "Chemistry", value: 20, averageScore: 75 },
+            { name: "Biology", value: 20, averageScore: 80 },
+        ];
+        const fallbackPerformance = [
+            { name: "Mathematics", score: 78, questions: 150 },
+            { name: "Physics", score: 82, questions: 120 },
+            { name: "Chemistry", score: 75, questions: 100 },
+            { name: "Biology", score: 80, questions: 80 },
+        ];
+        
+        setProgressData(fallbackData);
+        setSubjectData(fallbackSubjects);
+        setPerformanceData(fallbackPerformance);
+        setHasRealData(false);
+        setLoading(false);
+    }
+
+    console.log('📊 [PROGRESS_CHARTS] Rendering charts with data:', {
+        progressData,
+        subjectData,
+        performanceData
+    });
 
 
 
